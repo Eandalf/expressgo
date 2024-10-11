@@ -13,8 +13,9 @@ func CreateServer() App {
 }
 
 func (app *App) Listen(port int) {
+	log.Println("expressgo listens to port: " + strconv.Itoa(port))
 	err := http.ListenAndServe(":"+strconv.Itoa(port), nil)
 	if err != nil {
-		log.Println("expressgo listen to: " + strconv.Itoa(port))
+		log.Fatalln(err)
 	}
 }
