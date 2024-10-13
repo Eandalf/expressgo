@@ -4,6 +4,8 @@
 
 As stated in the module name, this project aims to create a layer to use **Express.js** like API on top of Go standard **net/http**.
 
+API in ExpressGo aligns to specifications of Express.js 5.x API [Reference](https://expressjs.com/en/5x/api.html).
+
 ExpressGo leveraged **ServeMux** in **net/http** and would create a custom **ServeMux** with the following configurations.
 
 ### Default Configurations
@@ -14,11 +16,14 @@ ExpressGo leveraged **ServeMux** in **net/http** and would create a custom **Ser
 
 ## TODO
 
-### Layer Between Express.js-like API to DefaultServeMux
+### Jump to Next Route if Provided
 
-1. Return an error if a host is trying to be registered into a path matching pattern.
-2. Precise path matching using `{$}` at the end of every path matching pattern.
-3. Case insensitive path matching, possible approach: [Kevin Gillette Re: [go-nuts] http.HandleFunc case insensitive path match, default match](https://groups.google.com/g/golang-nuts/c/M-_CyKCSGiA/m/-Z03K33HHRUJ).
+1. redirect the request to another matching path in the handler
+
+### Parse Params & Query String
+
+1. parse params with the form from `:id` to `{id}`
+2. set query string pairs into req.query
 
 ## Warning
 

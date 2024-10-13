@@ -32,19 +32,23 @@ func (app *App) isHostIncluded(path string) bool {
 }
 
 func (app *App) makePrecise(path string) string {
-	return path + "{$}"
+	return path + "/{$}"
 }
 
 func (app *App) pathToLower(path string) string {
 	return strings.ToLower(path)
 }
 
-func (app *App) Register(path string, handler http.Handler) error {
+func (app *App) register(method string, path string, handler http.Handler) error {
 	if app.isHostIncluded(path) {
 		return errors.New("path cannot contain host")
 	}
 
 	p := app.makePrecise(app.pathToLower(path))
+	if method != "" {
+		p = method + " " + p
+	}
+
 	app.handler.mux.Handle(p, handler)
 	return nil
 }
