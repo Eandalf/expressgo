@@ -52,5 +52,5 @@ func (app *App) createConnection() (*Request, *Response, *Next) {
 }
 
 func (app *App) Get(path string, callbacks ...Callback) error {
-	return app.register(http.MethodGet, path, &UserHandler{app: app, callbacks: callbacks})
+	return app.handler.register(http.MethodGet, path, &UserHandler{app: app, callbacks: callbacks})
 }
