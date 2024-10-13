@@ -8,6 +8,7 @@ import (
 
 type Handler struct {
 	mux *http.ServeMux
+	app *App
 }
 
 // For path registration
@@ -17,6 +18,11 @@ func (h *Handler) isHostIncluded(path string) bool {
 }
 
 func (h *Handler) makePrecise(path string) string {
+	// check if the trailing "/" exists
+	if pathSegments := strings.Split(path, "/"); pathSegments[len(pathSegments)-1] == "" {
+		return path + "{$}"
+	}
+
 	return path + "/{$}"
 }
 
@@ -25,11 +31,20 @@ func (h *Handler) pathToLower(path string) string {
 }
 
 func (h *Handler) register(method string, path string, handler http.Handler) error {
-	if h.isHostIncluded(path) {
+	// apply config options
+	if !h.app.allowHost && h.isHostIncluded(path) {
 		return errors.New("path cannot contain host")
 	}
 
-	p := h.makePrecise(h.pathToLower(path))
+	// apply config options
+	p := path
+	if !h.app.caseSensitive {
+		p = h.pathToLower(path)
+	}
+	if !h.app.coarse {
+		p = h.makePrecise(p)
+	}
+
 	if method != "" {
 		p = method + " " + p
 	}
@@ -41,6 +56,10 @@ func (h *Handler) register(method string, path string, handler http.Handler) err
 // For processing requests
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	r.URL.Path = strings.ToLower(r.URL.Path)
+	// apply config options
+	if !h.app.caseSensitive {
+		r.URL.Path = strings.ToLower(r.URL.Path)
+	}
+
 	h.mux.ServeHTTP(w, r)
 }

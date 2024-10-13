@@ -5,7 +5,12 @@ import (
 )
 
 func main() {
-	app := expressgo.CreateServer()
+	config := expressgo.Config{}
+	// config.AllowHost = true
+	// config.Coarse = true
+	app := expressgo.CreateServer(config)
+
+	// app.Use("case sensitive routing", true)
 
 	app.Get("/test/status", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 		res.SendStatus(201)
@@ -17,6 +22,14 @@ func main() {
 
 	app.Get("/test/end", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 		res.End()
+	})
+
+	app.Get("127.0.0.1/test/host", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		res.Send("Hello from 127.0.0.1/test/host")
+	})
+
+	app.Get("/", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		res.Send("Hello from root")
 	})
 
 	app.Listen(8080)
