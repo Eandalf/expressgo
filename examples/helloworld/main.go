@@ -32,5 +32,25 @@ func main() {
 		res.Send("Hello from root")
 	})
 
+	app.Get(
+		"/test/next",
+		func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+			req.Params["id"] = "101"
+			next.Next = true
+		},
+		func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+			res.Send("id: " + req.Params["id"])
+		},
+	)
+
+	app.Get("/test/next/route", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		req.Params["id"] = "101"
+		next.Route = "route"
+	})
+
+	app.Get("/test/next/route", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		res.Send("id: " + req.Params["id"])
+	})
+
 	app.Listen(8080)
 }

@@ -18,12 +18,8 @@ func (h *Handler) isHostIncluded(path string) bool {
 }
 
 func (h *Handler) makePrecise(path string) string {
-	// check if the trailing "/" exists
-	if pathSegments := strings.Split(path, "/"); pathSegments[len(pathSegments)-1] == "" {
-		return path + "{$}"
-	}
-
-	return path + "/{$}"
+	// remove the trailing "/"
+	return strings.TrimSuffix(path, "/") + "/{$}"
 }
 
 func (h *Handler) pathToLower(path string) string {

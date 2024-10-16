@@ -4,13 +4,6 @@ import (
 	"net/http"
 )
 
-func (app *App) createConnection() (*Request, *Response, *Next) {
-	req := &Request{params: make(map[string]string), query: make(map[string]string)}
-	res := &Response{end: false, statusCode: 0, body: ""}
-	next := &Next{next: false, route: ""}
-	return req, res, next
-}
-
 const (
 	useOptionKeyCaseSensitive = "case sensitive routing"
 )
@@ -23,5 +16,16 @@ func (app *App) Use(key string, value bool) {
 }
 
 func (app *App) Get(path string, callbacks ...Callback) error {
+	route := http.MethodGet + " " + path
+
+	// register the slice of callbacks with the route formed by the method and the path
+	// if the route already exists, push the slice of callbacks to map and not register it to ServeMux
+	if _, ok := app.routes[route]; ok {
+		existingCallbacks := app.routes[route]
+		app.routes[route] = append(existingCallbacks, callbacks)
+		return nil
+	}
+
+	app.routes[route] = [][]Callback{callbacks}
 	return app.handler.register(http.MethodGet, path, &UserHandler{app: app, callbacks: callbacks})
 }

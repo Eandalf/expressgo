@@ -71,10 +71,6 @@ WIP
 
 ## TODO
 
-### Jump to Next Route if Provided
-
-1. redirect the request to another matching path in the handler
-
 ### Parse Params & Query String
 
 1. parse params with the form from `:id` to `{id}`

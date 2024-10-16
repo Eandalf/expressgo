@@ -8,6 +8,7 @@ import (
 
 type App struct {
 	handler       *Handler
+	routes        map[string][][]Callback
 	allowHost     bool
 	coarse        bool
 	caseSensitive bool
@@ -22,7 +23,7 @@ func CreateServer(config ...Config) App {
 	mux := http.NewServeMux()
 
 	// perform the configuration, config is made to a slice to mimic behaviors of optional parameters
-	app := App{handler: &Handler{mux: mux}}
+	app := App{handler: &Handler{mux: mux}, routes: make(map[string][][]Callback)}
 	app.handler.app = &app
 	if len(config) > 0 {
 		c := config[0]
