@@ -8,7 +8,7 @@ import (
 
 type Next struct {
 	Next  bool
-	Route string
+	Route bool
 }
 
 type Callback func(req *Request, res *Response, next *Next)
@@ -22,7 +22,7 @@ type UserHandler struct {
 func (u *UserHandler) createContext() (*Request, *Response, *Next) {
 	req := &Request{Params: make(map[string]string), Query: make(map[string]string)}
 	res := &Response{end: false, statusCode: 0, body: ""}
-	next := &Next{Next: false, Route: ""}
+	next := &Next{Next: false, Route: false}
 	return req, res, next
 }
 
@@ -47,7 +47,7 @@ func (u *UserHandler) runCallbacks(
 		}
 
 		// check next route
-		if next.Route == "route" {
+		if next.Route {
 			// ensure the index is not out of the boundary
 			if currentCallbackSetIndex+1 > len(u.app.routes[u.route])-1 {
 				break
@@ -62,7 +62,7 @@ func (u *UserHandler) runCallbacks(
 				currentCallbackSetIndex+1,
 				req,
 				res,
-				&Next{Next: false, Route: ""},
+				&Next{Next: false, Route: false},
 				w,
 			)
 			break

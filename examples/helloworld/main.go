@@ -45,7 +45,7 @@ func main() {
 
 	app.Get("/test/next/route", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 		req.Params["id"] = "101"
-		next.Route = "route"
+		next.Route = true
 	})
 
 	app.Get("/test/next/route", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {

@@ -38,7 +38,7 @@ app := expressgo.CreateServer(config)
 // app := expressgo.CreateServer()
 ```
 
-#### Add callbacks to routes
+#### Add Callbacks to Routes
 
 ```go
 // Get(string, func(*expressgo.Request, *expressgo.Response, *expressgo.Next))
@@ -67,7 +67,27 @@ WIP
 
 ### Next
 
-WIP
+At the current stage, it is still not possible to redifine function behaviors at runtime to mimic `next()` or `next('route')` usages in **Express.js**. Therefore, it is implemented this way to pass in a `*Next` pointer to a callback, so a callback could either use `next.Next = true` to activate the next callback or use `next.Route = true` to activate another list of callbacks defined on the same route. After the aforementioned `next.Next = true` or `next.Route = true` statement, remember to add `return` to exit the current callback if skipping any following logics is needed.
+
+To run the next callback:
+
+```go
+// callback
+func(*expressgo.Request, *expressgo.Response, next *expressgo.Next) {
+    next.Next = true
+    return
+}
+```
+
+To run another list of callbacks defined on the same route:
+
+```go
+// callback
+func(*expressgo.Request, *expressgo.Response, next *expressgo.Next) {
+    next.Route = true
+    return
+}
+```
 
 ## TODO
 
