@@ -13,6 +13,7 @@ ExpressGo leveraged **ServeMux** in **net/http** and would create a custom **Ser
 1. **Host** is not allowed in path matching.
 2. All path matching is precise.
 3. Path matching is case insensitive.
+4. Defining multiple lists of callbacks on the same route is allowed.
 
 To alter the behavior back to defaults of **net/http**:
 
@@ -69,6 +70,8 @@ WIP
 
 At the current stage, it is still not possible to redifine function behaviors at runtime to mimic `next()` or `next('route')` usages in **Express.js**. Therefore, it is implemented this way to pass in a `*Next` pointer to a callback, so a callback could either use `next.Next = true` to activate the next callback or use `next.Route = true` to activate another list of callbacks defined on the same route. After the aforementioned `next.Next = true` or `next.Route = true` statement, remember to add `return` to exit the current callback if skipping any following logics is needed.
 
+Note: `route` refers to the combination of `method` and `path`.
+
 To run the next callback:
 
 ```go
@@ -88,6 +91,8 @@ func(*expressgo.Request, *expressgo.Response, next *expressgo.Next) {
     return
 }
 ```
+
+Note: The next list refers to the list defined after the current list, in the order being called using the same `app.[Method]` on the same path.
 
 ## TODO
 
