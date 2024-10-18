@@ -3,7 +3,6 @@ package expressgo
 import (
 	"io"
 	"net/http"
-	"strings"
 )
 
 type Next struct {
@@ -92,12 +91,12 @@ func (u *UserHandler) runCallbacks(
 		// check next route
 		if next.Route {
 			// ensure the index is not out of the boundary
-			if currentCallbackSetIndex+1 > len(u.app.routes[u.route])-1 {
+			if currentCallbackSetIndex+1 > len(u.app.callbacks[u.route])-1 {
 				break
 			}
 
 			// get the next list of callbacks associated with the designated route
-			nextCallbacks := u.app.routes[u.route][currentCallbackSetIndex+1]
+			nextCallbacks := u.app.callbacks[u.route][currentCallbackSetIndex+1]
 
 			// run callbacks
 			u.runCallbacks(
@@ -120,7 +119,7 @@ func (u *UserHandler) runCallbacks(
 
 func (u *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// save the route first
-	u.route = strings.TrimSuffix(r.Method+" "+r.URL.Path, "/")
+	u.route = r.Pattern
 
 	// prepare custom objects, including req, res, and next
 	req, res, next := u.createContext()

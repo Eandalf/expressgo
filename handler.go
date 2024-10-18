@@ -244,6 +244,19 @@ func (h *Handler) register(method string, path string, handler http.Handler) err
 	// register params
 	h.app.params[p] = params
 
+	// register callbacks
+	// register the slice of callbacks with the route formed by the method and the path
+	callbacks := []Callback{}
+	if uh, ok := handler.(*UserHandler); ok {
+		callbacks = uh.callbacks
+	}
+	// if the route already exists, push the slice of callbacks to map and not register it to ServeMux
+	if _, ok := h.app.callbacks[p]; ok {
+		h.app.callbacks[p] = append(h.app.callbacks[p], callbacks)
+		return nil
+	}
+	h.app.callbacks[p] = [][]Callback{callbacks}
+
 	h.mux.Handle(p, handler)
 	return nil
 }
