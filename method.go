@@ -21,8 +21,7 @@ func (app *App) Get(path string, callbacks ...Callback) error {
 	// register the slice of callbacks with the route formed by the method and the path
 	// if the route already exists, push the slice of callbacks to map and not register it to ServeMux
 	if _, ok := app.routes[route]; ok {
-		existingCallbacks := app.routes[route]
-		app.routes[route] = append(existingCallbacks, callbacks)
+		app.routes[route] = append(app.routes[route], callbacks)
 		return nil
 	}
 

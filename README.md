@@ -60,6 +60,46 @@ app.Listen(8080) // 8080 is the port number
 
 ### Request
 
+#### Path Params
+
+Path params should be in the form of `:name`.
+
+```go
+app.Get("/user/:id", func(req *expressgo.Request, res *expressgo.Response, *expressgo.Next) {
+    res.Send(req.Param["id"])
+})
+
+// Request: GET /user/101
+// Respond: 101
+```
+
+To use separators, like hyphen (-) or dot (.):
+
+```go
+app.Get("/test/:one-:two-:three/:four.:five", func(req *expressgo.Request, res *expressgo.Response, *expressgo.Next) {
+    lines := []string{}
+    for k, v := range req.Params {
+        lines = append(lines, fmt.Sprintf("%s: %s", k, v))
+    }
+
+    output := ""
+    for _, line := range lines {
+        output += line + "<br />"
+    }
+    res.Send(output)
+})
+
+// Request: GET /test/1-2-3/4.5
+// Respond: one: 1<br />two: 2<br />three: 3<br />four: 4<br />five: 5<br />
+```
+
+Note:
+
+1. Paths should not contain `{}`. ExpressGo would treat it as a literal and pass it down to `http.ServeMux`, and an error would occur.
+2. Params should not have names ending with either `0H` or `0D`. These two strings are used for separators, including hyphens and dots.
+
+#### Query String
+
 WIP
 
 ### Response
@@ -96,10 +136,17 @@ Note: The next list refers to the list defined after the current list, in the or
 
 ## TODO
 
-### Parse Params & Query String
+### Parse Query String
 
-1. parse params with the form from `:id` to `{id}`
-2. set query string pairs into req.query
+1. set query string pairs into req.query
+
+### app.route()
+
+1. chainable methods with path already included
+
+### Router
+
+1. mountable mini-app
 
 ## Warning
 

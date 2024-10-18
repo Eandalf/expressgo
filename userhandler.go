@@ -20,10 +20,53 @@ type UserHandler struct {
 }
 
 func (u *UserHandler) createContext() (*Request, *Response, *Next) {
-	req := &Request{Params: make(map[string]string), Query: make(map[string]string)}
+	req := &Request{Params: map[string]string{}, Query: map[string]string{}}
 	res := &Response{end: false, statusCode: 0, body: ""}
 	next := &Next{Next: false, Route: false}
 	return req, res, next
+}
+
+func (u *UserHandler) setParams(r *http.Request, req *Request) {
+	for _, paramsInZone := range u.app.params[r.Pattern] {
+		param := ""
+		for _, p := range paramsInZone {
+			param += p
+		}
+
+		values := r.PathValue(param)
+
+		value := ""
+		paramIndex := 0
+		for _, char := range values {
+			if char == '-' {
+				if paramIndex+1 < len(paramsInZone) && paramsInZone[paramIndex+1] == "0H" {
+					req.Params[paramsInZone[paramIndex]] = value
+
+					// for next param
+					value = ""
+					paramIndex += 2
+				} else {
+					value += string(char)
+				}
+			} else if char == '.' {
+				if paramIndex+1 < len(paramsInZone) && paramsInZone[paramIndex+1] == "0D" {
+					req.Params[paramsInZone[paramIndex]] = value
+
+					// for next param
+					value = ""
+					paramIndex += 2
+				} else {
+					value += string(char)
+				}
+			} else {
+				value += string(char)
+			}
+		}
+
+		if value != "" && paramIndex < len(paramsInZone) {
+			req.Params[paramsInZone[paramIndex]] = value
+		}
+	}
 }
 
 // go through callbacks
@@ -53,7 +96,7 @@ func (u *UserHandler) runCallbacks(
 				break
 			}
 
-			// get the next set of callbacks associated with the designated path
+			// get the next list of callbacks associated with the designated route
 			nextCallbacks := u.app.routes[u.route][currentCallbackSetIndex+1]
 
 			// run callbacks
@@ -81,6 +124,9 @@ func (u *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// prepare custom objects, including req, res, and next
 	req, res, next := u.createContext()
+
+	// append params
+	u.setParams(r, req)
 
 	// execute the callbacks
 	u.runCallbacks(u.callbacks, 0, req, res, next, w)

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/Eandalf/expressgo"
 )
 
@@ -50,6 +52,19 @@ func main() {
 
 	app.Get("/test/next/route", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 		res.Send("id: " + req.Params["id"])
+	})
+
+	app.Get("/test/params/:one-:two-:three/:four.:five", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		lines := []string{}
+		for k, v := range req.Params {
+			lines = append(lines, fmt.Sprintf("%s: %s", k, v))
+		}
+
+		output := ""
+		for _, line := range lines {
+			output += line + "<br />"
+		}
+		res.Send(output)
 	})
 
 	app.Listen(8080)
