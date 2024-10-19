@@ -64,6 +64,12 @@ func (u *UserHandler) setParams(r *http.Request, req *Request) {
 
 		if value != "" && paramIndex < len(paramsInZone) {
 			req.Params[paramsInZone[paramIndex]] = value
+			paramIndex += 2
+		}
+
+		// if any remaining param is not assigned with a value, assign "" to it
+		for ; paramIndex < len(paramsInZone); paramIndex += 2 {
+			req.Params[paramsInZone[paramIndex]] = ""
 		}
 	}
 }
