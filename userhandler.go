@@ -74,7 +74,18 @@ func (u *UserHandler) setParams(r *http.Request, req *Request) {
 	}
 }
 
-// go through callbacks
+// Set req.Query[string]string from r.URL.Query().Get(string).
+//
+// We only accept the first value of a key from the query string.
+func (u *UserHandler) setQuery(r *http.Request, req *Request) {
+	q := r.URL.Query()
+	for k := range q {
+		// we only accept the first value of a key from the query string
+		req.Query[k] = q.Get(k)
+	}
+}
+
+// Go through callbacks
 func (u *UserHandler) runCallbacks(
 	callbacks []Callback,
 	currentCallbackSetIndex int,
@@ -132,6 +143,9 @@ func (u *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// append params
 	u.setParams(r, req)
+
+	// set the query
+	u.setQuery(r, req)
 
 	// execute the callbacks
 	u.runCallbacks(u.callbacks, 0, req, res, next, w)

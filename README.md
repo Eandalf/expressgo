@@ -136,9 +136,9 @@ func(*expressgo.Request, *expressgo.Response, next *expressgo.Next) {
 
 ## TODO
 
-### Parse Query String
+### Parse Body JSON
 
-1. set query string pairs into req.query
+1. parse JSON body if content type is provided
 
 ### app.route()
 

@@ -67,5 +67,13 @@ func main() {
 		res.Send(output)
 	})
 
+	app.Get("/test/query", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		output := ""
+		for k, v := range req.Query {
+			output += fmt.Sprintf("%s: %s<br />", k, v)
+		}
+		res.Send(output)
+	})
+
 	app.Listen(8080)
 }
