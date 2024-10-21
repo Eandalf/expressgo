@@ -62,7 +62,7 @@ app.Listen(8080) // 8080 is the port number
 
 #### Path Params
 
-Path params should be in the form of `:name`.
+Path params should be in the form of `:name`. A valid param name has the form of `[A-Za-z_][A-Za-z0-9_]*`, starting with A-Z, a-z, or underscore (\_), and concatenated with A-Z, a-z, 0-9, or underscore (\_).
 
 ```go
 app.Get("/user/:id", func(req *expressgo.Request, res *expressgo.Response, *expressgo.Next) {
@@ -93,10 +93,10 @@ app.Get("/test/:one-:two-:three/:four.:five", func(req *expressgo.Request, res *
 // Respond: one: 1<br />two: 2<br />three: 3<br />four: 4<br />five: 5<br />
 ```
 
-Note:
-
-1. Paths should not contain `{}`. ExpressGo would treat it as a literal and pass it down to `http.ServeMux`, and an error would occur.
-2. Params should not have names ending with either `0H` or `0D`. These two strings are used for separators, including hyphens and dots.
+> Note:
+>
+> 1. Paths should not contain `{}`. ExpressGo would treat it as a literal and pass it down to `http.ServeMux`, and an error would occur.
+> 2. Params should not have names ending with either `0H` or `0D`. These two strings are used for separators, including hyphens and dots.
 
 #### Query String
 
@@ -110,7 +110,7 @@ WIP
 
 At the current stage, it is still not possible to redifine function behaviors at runtime to mimic `next()` or `next('route')` usages in **Express.js**. Therefore, it is implemented this way to pass in a `*Next` pointer to a callback, so a callback could either use `next.Next = true` to activate the next callback or use `next.Route = true` to activate another list of callbacks defined on the same route. After the aforementioned `next.Next = true` or `next.Route = true` statement, remember to add `return` to exit the current callback if skipping any following logics is needed.
 
-Note: `route` refers to the combination of `method` and `path`.
+> Note: `route` refers to the combination of `method` and `path`.
 
 To run the next callback:
 
@@ -132,7 +132,7 @@ func(*expressgo.Request, *expressgo.Response, next *expressgo.Next) {
 }
 ```
 
-Note: The next list refers to the list defined after the current list, in the order being called using the same `app.[Method]` on the same path.
+> Note: The next list refers to the list defined after the current list, in the order being called using the same `app.[Method]` on the same path.
 
 ## TODO
 

@@ -128,7 +128,7 @@ func (h *Handler) parseParams(path string) (string, [][]string, error) {
 				if currentParam != "" {
 					// invalid variable name found
 					if !h.isValidParamName(currentParam) {
-						return path, [][]string{}, errors.New("name of a path param is invalid")
+						return path, [][]string{}, errors.New("name of a path param is invalid, " + currentParam + " is found")
 					}
 
 					currentParams = append(currentParams, currentParam)
@@ -164,7 +164,7 @@ func (h *Handler) parseParams(path string) (string, [][]string, error) {
 					if currentParam != "" {
 						// invalid variable name found
 						if !h.isValidParamName(currentParam) {
-							return path, [][]string{}, errors.New("name of a path param is invalid")
+							return path, [][]string{}, errors.New("name of a path param is invalid, " + currentParam + " is found")
 						}
 
 						currentParams = append(currentParams, currentParam)
@@ -180,7 +180,7 @@ func (h *Handler) parseParams(path string) (string, [][]string, error) {
 			matched := isValidParamChar.MatchString(string(char))
 			// invalid variable name found
 			if !matched {
-				return path, [][]string{}, errors.New("name of a path param is invalid")
+				return path, [][]string{}, errors.New("name of a path param is invalid, " + string(char) + " should not be a part of a param name")
 			}
 
 			currentParam += string(char)
@@ -199,7 +199,7 @@ func (h *Handler) parseParams(path string) (string, [][]string, error) {
 	if currentParam != "" {
 		// invalid variable name found
 		if !h.isValidParamName(currentParam) {
-			return path, [][]string{}, errors.New("name of a path param is invalid")
+			return path, [][]string{}, errors.New("name of a path param is invalid, " + currentParam + " is found")
 		}
 
 		currentParams = append(currentParams, currentParam)
