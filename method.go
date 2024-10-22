@@ -5,8 +5,20 @@ import (
 )
 
 const (
-	useOptionKeyCaseSensitive = "case sensitive routing"
+	configKeyCaseSensitive = "case sensitive routing"
 )
+
+var allMethods = [...]string{
+	http.MethodGet,
+	http.MethodHead,
+	http.MethodPost,
+	http.MethodPut,
+	http.MethodPatch,
+	http.MethodDelete,
+	http.MethodConnect,
+	http.MethodOptions,
+	http.MethodTrace,
+}
 
 // Provided with an app global data table.
 //
@@ -19,7 +31,7 @@ const (
 // e.g., app.Set("case sensitive routing", true)
 func (app *App) Set(key string, value interface{}) {
 	switch key {
-	case useOptionKeyCaseSensitive:
+	case configKeyCaseSensitive:
 		if isCaseSensitive, ok := value.(bool); ok {
 			app.config.caseSensitive = isCaseSensitive
 		}
@@ -32,6 +44,19 @@ func (app *App) Set(key string, value interface{}) {
 func (app *App) GetData(key string) interface{} {
 	if data, ok := app.data[key]; ok {
 		return data
+	}
+	return nil
+}
+
+// To mount callbacks as middlewares to the path with all http methods.
+//
+// The order of declaration matters.
+func (app *App) Use(path string, callbacks ...Callback) error {
+	for _, method := range allMethods {
+		err := app.handler.register(method, path, &UserHandler{app: app, callbacks: callbacks})
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

@@ -14,12 +14,12 @@ func main() {
 
 	// app.Set("case sensitive routing", true)
 
-	app.Get("/test/status", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+	app.Get("/test/status/1", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 		res.SendStatus(201)
 	})
 
-	app.Get("/test/body", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
-		res.Status(202).Send("Hello from /test/body")
+	app.Get("/test/status/2", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		res.Status(202).Send("Hello from /test/status/2")
 	})
 
 	app.Get("/test/end", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
@@ -73,6 +73,15 @@ func main() {
 			output += fmt.Sprintf("%s: %s<br />", k, v)
 		}
 		res.Send(output)
+	})
+
+	app.Use("/test/use", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		req.Params["id"] = "102"
+		next.Route = true
+	})
+
+	app.Get("/test/use", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		res.Send("id: " + req.Params["id"])
 	})
 
 	app.Listen(8080)

@@ -100,7 +100,21 @@ app.Get("/test/:one-:two-:three/:four.:five", func(req *expressgo.Request, res *
 
 #### Query String
 
-WIP
+Query string could be read from `req.Query["key"]`.
+
+```go
+app.Get("/test/query", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+    res.Send(req.Query["id"])
+})
+
+// Request: GET /test/query?id=101
+// Respond: 101
+```
+
+> Note:
+>
+> 1. Query string would be parsed no matter with which http method.
+> 2. Only the first value of a key from the query string is parsed.
 
 ### Response
 
@@ -134,11 +148,59 @@ func(*expressgo.Request, *expressgo.Response, next *expressgo.Next) {
 
 > Note: The next list refers to the list defined after the current list, in the order being called using the same `app.[Method]` on the same path.
 
+## Method
+
+app.[Method]
+
+### app.Use
+
+To mount callbacks as middlewares to the path with all http methods.
+
+The order of declaration matters. The callbacks of `app.[Method]` defined before `app.Use` would be executed before the inserted middlewares using `app.Use`.
+
+```go
+app.Use("/test/use", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+    req.Params["id"] = "101"
+    // next.Route is recommended to be set to `true`, otherwise, nothing after the middleware could be executed
+    next.Route = true
+})
+
+app.Get("/test/use", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+    res.Send(req.Params["id"])
+})
+
+// Request: GET /test/use
+// Respond: 101
+```
+
+### app.Get
+
+For GET requests.
+
+```go
+app.Get("/", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+    res.Send("Hello from root")
+})
+
+// Request: GET /
+// Respond: Hello from root
+```
+
 ## TODO
 
 ### Parse Body JSON
 
 1. parse JSON body if content type is provided
+
+> implement app.use for inserting middleware on a path (with all methods)
+> app.use should be identical to app.all
+> app.use for middleware
+> app.all for all http verbs
+> Check content type: application/json
+> Read body: r.Body
+> Parse json:
+> var j interface{}
+> err = json.NewDecoder(resp.Body).Decode(&j)
 
 ### app.route()
 
