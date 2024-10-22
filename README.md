@@ -23,7 +23,7 @@ config.AllowHost = true // to allow host
 config.Coarse = true // to opt-out precise path matching
 
 app := expressgo.CreateServer(config)
-app.Use("case sensitive routing", true) // to use case sensitive path matching
+app.Set("case sensitive routing", true) // to use case sensitive path matching
 ```
 
 ## Usage

@@ -8,10 +8,21 @@ const (
 	useOptionKeyCaseSensitive = "case sensitive routing"
 )
 
-func (app *App) Use(key string, value bool) {
+// Provided with an app global data table.
+//
+// Set data: app.Set(string, interface{})
+//
+// Get data: app.Get(string) interface{}
+//
+// Other than setting data into the app global data table, the method could set app configuration options.
+//
+// e.g., app.Set("case sensitive routing", true)
+func (app *App) Set(key string, value interface{}) {
 	switch key {
 	case useOptionKeyCaseSensitive:
-		app.caseSensitive = value
+		if isCaseSensitive, ok := value.(bool); ok {
+			app.config.caseSensitive = isCaseSensitive
+		}
 	}
 }
 

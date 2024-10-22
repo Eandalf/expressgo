@@ -218,7 +218,7 @@ func (h *Handler) parseParams(path string) (string, [][]string, error) {
 
 func (h *Handler) register(method string, path string, handler http.Handler) error {
 	// apply config options
-	if !h.app.allowHost && h.isHostIncluded(path) {
+	if !h.app.config.allowHost && h.isHostIncluded(path) {
 		return errors.New("path cannot contain host")
 	}
 
@@ -229,10 +229,10 @@ func (h *Handler) register(method string, path string, handler http.Handler) err
 	}
 
 	// apply config options
-	if !h.app.caseSensitive {
+	if !h.app.config.caseSensitive {
 		p = h.pathToLower(p)
 	}
-	if !h.app.coarse {
+	if !h.app.config.coarse {
 		p = h.makePrecise(p)
 	}
 
@@ -265,7 +265,7 @@ func (h *Handler) register(method string, path string, handler http.Handler) err
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// apply config options
-	if !h.app.caseSensitive {
+	if !h.app.config.caseSensitive {
 		r.URL.Path = strings.ToLower(r.URL.Path)
 	}
 

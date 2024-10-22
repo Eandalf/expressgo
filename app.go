@@ -6,15 +6,19 @@ import (
 	"strconv"
 )
 
+type appConfig struct {
+	allowHost     bool
+	coarse        bool
+	caseSensitive bool
+}
+
 type App struct {
+	config  *appConfig
 	handler *Handler
 	// multiple lists of callbacks associated with a route, routeA -> [[c11, c12, c13], [c21, c22]]
 	callbacks map[string][][]Callback
 	// params associated with a route, routeA -> [[param1, param2], [param3]]
-	params        map[string][][]string
-	allowHost     bool
-	coarse        bool
-	caseSensitive bool
+	params map[string][][]string
 }
 
 type Config struct {
@@ -26,12 +30,17 @@ func CreateServer(config ...Config) App {
 	mux := http.NewServeMux()
 
 	// perform the configuration, config is made to a slice to mimic behaviors of optional parameters
-	app := App{handler: &Handler{mux: mux}, callbacks: map[string][][]Callback{}, params: map[string][][]string{}}
+	app := App{
+		config:    &appConfig{},
+		handler:   &Handler{mux: mux},
+		callbacks: map[string][][]Callback{},
+		params:    map[string][][]string{},
+	}
 	app.handler.app = &app
 	if len(config) > 0 {
 		c := config[0]
-		app.allowHost = c.AllowHost
-		app.coarse = c.Coarse
+		app.config.allowHost = c.AllowHost
+		app.config.coarse = c.Coarse
 	}
 
 	return app

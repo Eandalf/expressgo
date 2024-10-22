@@ -12,7 +12,7 @@ func main() {
 	// config.Coarse = true
 	app := expressgo.CreateServer(config)
 
-	// app.Use("case sensitive routing", true)
+	// app.Set("case sensitive routing", true)
 
 	app.Get("/test/status", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 		res.SendStatus(201)
