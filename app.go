@@ -13,7 +13,9 @@ type appConfig struct {
 }
 
 type App struct {
-	config  *appConfig
+	config *appConfig
+	// global data table for app
+	data    map[string]interface{}
 	handler *Handler
 	// multiple lists of callbacks associated with a route, routeA -> [[c11, c12, c13], [c21, c22]]
 	callbacks map[string][][]Callback
@@ -32,6 +34,7 @@ func CreateServer(config ...Config) App {
 	// perform the configuration, config is made to a slice to mimic behaviors of optional parameters
 	app := App{
 		config:    &appConfig{},
+		data:      map[string]interface{}{},
 		handler:   &Handler{mux: mux},
 		callbacks: map[string][][]Callback{},
 		params:    map[string][][]string{},
