@@ -192,10 +192,6 @@ app.Get("/", func(req *expressgo.Request, res *expressgo.Response, next *express
 
 1. parse JSON body if content type is provided
 
-> implement app.use for inserting middleware on a path (with all methods)
-> app.use should be identical to app.all
-> app.use for middleware
-> app.all for all http verbs
 > Check content type: application/json
 > Read body: r.Body
 > Parse json:

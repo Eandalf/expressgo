@@ -80,7 +80,7 @@ func main() {
 		next.Route = true
 	})
 
-	app.Get("/test/use", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+	app.All("/test/use", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 		res.Send("id: " + req.Params["id"])
 	})
 

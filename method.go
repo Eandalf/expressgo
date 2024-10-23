@@ -61,6 +61,15 @@ func (app *App) Use(path string, callbacks ...Callback) error {
 	return nil
 }
 
+// To catch all http verbs on a path.
+//
+// Although the implementation is basically the same as app.Use, app.Use is for middlewares, app.All is for http verbs.
+//
+// It is more semantically correct to use app.All for all http verbs.
+func (app *App) All(path string, callbacks ...Callback) error {
+	return app.Use(path, callbacks...)
+}
+
 func (app *App) Get(path string, callbacks ...Callback) error {
 	return app.handler.register(http.MethodGet, path, &UserHandler{app: app, callbacks: callbacks})
 }
