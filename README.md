@@ -152,6 +152,27 @@ func(*expressgo.Request, *expressgo.Response, next *expressgo.Next) {
 
 app.[Method]
 
+### app.UseGlobal
+
+To mount callbacks as middlewares to all paths with all http methods.
+
+The order of declaration matters. The callbacks of `app.[Method]` defined before `app.UseGlobal` would be executed before the inserted middlewares using `app.UseGlobal`.
+
+```go
+app.UseGlobal(func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+    req.Params["global"] = "global"
+    // next.Route is recommended to be set to `true`, otherwise, nothing after the middleware could be executed
+    next.Route = true
+})
+
+app.Get("/test/use/global", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+    res.Send(req.Params["global"])
+})
+
+// Request: GET /test/use/global
+// Respond: global
+```
+
 ### app.Use
 
 To mount callbacks as middlewares to the path with all http methods.

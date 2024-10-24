@@ -216,7 +216,7 @@ func (h *Handler) parseParams(path string) (string, [][]string, error) {
 	return parsedPath, params, nil
 }
 
-func (h *Handler) register(method string, path string, handler http.Handler) error {
+func (h *Handler) register(method string, path string, handler *UserHandler) error {
 	// apply config options
 	if !h.app.config.allowHost && h.isHostIncluded(path) {
 		return errors.New("path cannot contain host")
@@ -246,18 +246,22 @@ func (h *Handler) register(method string, path string, handler http.Handler) err
 
 	// register callbacks
 	// register the slice of callbacks with the route formed by the method and the path
-	callbacks := []Callback{}
-	if uh, ok := handler.(*UserHandler); ok {
-		callbacks = uh.callbacks
-	}
+	callbacks := handler.callbacks
 	// if the route already exists, push the slice of callbacks to map and not register it to ServeMux
 	if _, ok := h.app.callbacks[p]; ok {
 		h.app.callbacks[p] = append(h.app.callbacks[p], callbacks)
 		return nil
 	}
-	h.app.callbacks[p] = [][]Callback{callbacks}
+	// if global middlewares exist
+	if len(*h.app.globalCallbacks) > 0 {
+		// register existing global middlewares first for first-seen routes
+		h.app.callbacks[p] = append(*h.app.globalCallbacks, callbacks)
+		h.mux.Handle(p, &UserHandler{app: h.app, callbacks: (*h.app.globalCallbacks)[0]})
+	} else {
+		h.app.callbacks[p] = [][]Callback{callbacks}
+		h.mux.Handle(p, handler)
+	}
 
-	h.mux.Handle(p, handler)
 	return nil
 }
 

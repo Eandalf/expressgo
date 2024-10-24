@@ -19,6 +19,8 @@ type App struct {
 	handler *Handler
 	// multiple lists of callbacks associated with a route, routeA -> [[c11, c12, c13], [c21, c22]]
 	callbacks map[string][][]Callback
+	// lists of callbacks, format: [[c11, c12, c13], [c21, c22]], set by app.UseGlobal
+	globalCallbacks *[][]Callback
 	// params associated with a route, routeA -> [[param1, param2], [param3]]
 	params map[string][][]string
 }
@@ -33,11 +35,12 @@ func CreateServer(config ...Config) App {
 
 	// perform the configuration, config is made to a slice to mimic behaviors of optional parameters
 	app := App{
-		config:    &appConfig{},
-		data:      map[string]interface{}{},
-		handler:   &Handler{mux: mux},
-		callbacks: map[string][][]Callback{},
-		params:    map[string][][]string{},
+		config:          &appConfig{},
+		data:            map[string]interface{}{},
+		handler:         &Handler{mux: mux},
+		callbacks:       map[string][][]Callback{},
+		globalCallbacks: &[][]Callback{},
+		params:          map[string][][]string{},
 	}
 	app.handler.app = &app
 	if len(config) > 0 {

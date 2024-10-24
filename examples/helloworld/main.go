@@ -14,6 +14,11 @@ func main() {
 
 	// app.Set("case sensitive routing", true)
 
+	app.UseGlobal(func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		req.Params["global"] = "global"
+		next.Route = true
+	})
+
 	app.Get("/test/status/1", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 		res.SendStatus(201)
 	})

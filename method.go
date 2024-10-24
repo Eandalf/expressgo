@@ -48,6 +48,17 @@ func (app *App) GetData(key string) interface{} {
 	return nil
 }
 
+// To mount middlewares to all existing routes and future routes made by app.[Method].
+func (app *App) UseGlobal(callbacks ...Callback) {
+	// add global middlewares to all existing routes
+	for route := range app.callbacks {
+		app.callbacks[route] = append(app.callbacks[route], callbacks)
+	}
+
+	// push global middlewares to globalCallbacks for Handler.register to check and push to callbacks
+	*app.globalCallbacks = append(*app.globalCallbacks, callbacks)
+}
+
 // To mount callbacks as middlewares to the path with all http methods.
 //
 // The order of declaration matters.

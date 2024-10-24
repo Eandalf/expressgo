@@ -18,8 +18,12 @@ type UserHandler struct {
 	route     string
 }
 
-func (u *UserHandler) createContext() (*Request, *Response, *Next) {
-	req := &Request{Params: map[string]string{}, Query: map[string]string{}}
+func (u *UserHandler) createContext(r *http.Request) (*Request, *Response, *Next) {
+	req := &Request{
+		native: r,
+		Params: map[string]string{},
+		Query:  map[string]string{},
+	}
 	res := &Response{end: false, statusCode: 0, body: ""}
 	next := &Next{Next: false, Route: false}
 	return req, res, next
@@ -139,7 +143,7 @@ func (u *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	u.route = r.Pattern
 
 	// prepare custom objects, including req, res, and next
-	req, res, next := u.createContext()
+	req, res, next := u.createContext(r)
 
 	// append params
 	u.setParams(r, req)
