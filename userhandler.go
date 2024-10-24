@@ -20,7 +20,7 @@ type UserHandler struct {
 
 func (u *UserHandler) createContext(r *http.Request) (*Request, *Response, *Next) {
 	req := &Request{
-		native: r,
+		Native: r,
 		Params: map[string]string{},
 		Query:  map[string]string{},
 	}
