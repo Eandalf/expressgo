@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/Eandalf/expressgo"
@@ -87,6 +88,29 @@ func main() {
 
 	app.All("/test/use", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 		res.Send("id: " + req.Params["id"])
+	})
+
+	app.Get("/test/error", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		next.Err = errors.New("raised error in /test/error")
+	})
+
+	app.UseError(
+		"/test/error",
+		func(err error, req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+			req.Params["error0"] = err.Error()
+			next.Err = errors.New("raised error in /test/error 1st error handler")
+		}, func(err error, req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+			req.Params["error1"] = err.Error()
+			next.Err = errors.New("raised error in /test/error 2nd error handler")
+		},
+	)
+
+	app.UseGlobalError(func(err error, req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		output := ""
+		for k, v := range req.Params {
+			output += fmt.Sprintf("%s: %s<br />", k, v)
+		}
+		res.Send(output)
 	})
 
 	app.Listen(8080)

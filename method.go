@@ -48,8 +48,30 @@ func (app *App) GetData(key string) interface{} {
 	return nil
 }
 
-// To mount middlewares to all existing routes and future routes made by app.[Method].
-func (app *App) UseGlobal(callbacks ...Callback) {
+// Wrap normal callbacks with error checking logics.
+func (app *App) wrapCallbacks(callbacks []Callback) []Callback {
+	wrappedCallbacks := []Callback{}
+	for _, c := range callbacks {
+		var wc Callback = func(req *Request, res *Response, next *Next) {
+			// if an error needs to be handled, skip this callback
+			if req.err != nil {
+				return
+			}
+
+			c(req, res, next)
+		}
+		wrappedCallbacks = append(wrappedCallbacks, wc)
+	}
+
+	return wrappedCallbacks
+}
+
+// Mount the callbacks to all existing routes and future routes.
+//
+// This is an internal function that does not take wrapping callbacks into consideration.
+//
+// Callbacks passed into this function would not be wrapped with error-handling logics.
+func (app *App) useGlobal(callbacks []Callback) {
 	// add global middlewares to all existing routes
 	for route := range app.callbacks {
 		app.callbacks[route] = append(app.callbacks[route], callbacks)
@@ -59,10 +81,18 @@ func (app *App) UseGlobal(callbacks ...Callback) {
 	*app.globalCallbacks = append(*app.globalCallbacks, callbacks)
 }
 
-// To mount callbacks as middlewares to the path with all http methods.
+// To mount middlewares to all existing routes and future routes made by app.[Method].
+func (app *App) UseGlobal(callbacks ...Callback) {
+	wc := app.wrapCallbacks(callbacks)
+	app.useGlobal(wc)
+}
+
+// Mount callbacks to the path with all http methods
 //
-// The order of declaration matters.
-func (app *App) Use(path string, callbacks ...Callback) error {
+// This is an internal function that does not take wrapping callbacks into the consideration.
+//
+// Callbacks passed into this function would not be wrapped with error-handling logics.
+func (app *App) use(path string, callbacks []Callback) error {
 	for _, method := range allMethods {
 		err := app.handler.register(method, path, &UserHandler{app: app, callbacks: callbacks})
 		if err != nil {
@@ -70,6 +100,14 @@ func (app *App) Use(path string, callbacks ...Callback) error {
 		}
 	}
 	return nil
+}
+
+// To mount callbacks as middlewares to the path with all http methods.
+//
+// The order of invocation matters.
+func (app *App) Use(path string, callbacks ...Callback) error {
+	wc := app.wrapCallbacks(callbacks)
+	return app.use(path, wc)
 }
 
 // To catch all http verbs on a path.
@@ -82,5 +120,37 @@ func (app *App) All(path string, callbacks ...Callback) error {
 }
 
 func (app *App) Get(path string, callbacks ...Callback) error {
-	return app.handler.register(http.MethodGet, path, &UserHandler{app: app, callbacks: callbacks})
+	wc := app.wrapCallbacks(callbacks)
+	return app.handler.register(http.MethodGet, path, &UserHandler{app: app, callbacks: wc})
+}
+
+// Wrap error callbacks into callbacks.
+func (app *App) wrapErrorCallbacks(errorCallbacks []ErrorCallback) []Callback {
+	callbacks := []Callback{}
+	for _, ec := range errorCallbacks {
+		var c Callback = func(req *Request, res *Response, next *Next) {
+			// if no error needs to be handled
+			if req.err == nil {
+				return
+			}
+
+			ec(req.err, req, res, next)
+
+			// the error is consumed
+			req.err = nil
+		}
+		callbacks = append(callbacks, c)
+	}
+
+	return callbacks
+}
+
+func (app *App) UseError(path string, errorCallbacks ...ErrorCallback) {
+	callbacks := app.wrapErrorCallbacks(errorCallbacks)
+	app.use(path, callbacks)
+}
+
+func (app *App) UseGlobalError(errorCallbacks ...ErrorCallback) {
+	callbacks := app.wrapErrorCallbacks(errorCallbacks)
+	app.useGlobal(callbacks)
 }

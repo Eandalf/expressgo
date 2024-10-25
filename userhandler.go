@@ -8,9 +8,12 @@ import (
 type Next struct {
 	Next  bool
 	Route bool
+	Err   error
 }
 
 type Callback func(req *Request, res *Response, next *Next)
+
+type ErrorCallback func(err error, req *Request, res *Response, next *Next)
 
 type UserHandler struct {
 	app       *App
@@ -98,7 +101,7 @@ func (u *UserHandler) runCallbacks(
 	next *Next,
 	w http.ResponseWriter,
 ) {
-	for _, c := range callbacks {
+	for pos, c := range callbacks {
 		c(req, res, next)
 
 		// perform the write, res -> ResponseWriter
@@ -107,6 +110,20 @@ func (u *UserHandler) runCallbacks(
 		}
 		if res.body != "" {
 			io.WriteString(w, res.body)
+		}
+
+		// transfer the error from next to req
+		if next.Err != nil {
+			req.err = next.Err
+			next.Err = nil
+		}
+		// if the error is not consumed, activate next.Next or next.Route to pass the error to error handlers down the callback lists
+		if req.err != nil {
+			if pos == (len(callbacks) - 1) {
+				next.Route = true
+			} else {
+				next.Next = true
+			}
 		}
 
 		// check next route
@@ -135,6 +152,9 @@ func (u *UserHandler) runCallbacks(
 		if !next.Next || res.end {
 			break
 		}
+
+		// reset next.Next after finishing a callback
+		next.Next = false
 	}
 }
 

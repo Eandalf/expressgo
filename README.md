@@ -156,7 +156,7 @@ app.[Method]
 
 To mount callbacks as middlewares to all paths with all http methods.
 
-The order of declaration matters. The callbacks of `app.[Method]` defined before `app.UseGlobal` would be executed before the inserted middlewares using `app.UseGlobal`.
+The order of invocation matters. The callbacks of `app.[Method]` defined before `app.UseGlobal` would be executed before the inserted middlewares using `app.UseGlobal`.
 
 ```go
 app.UseGlobal(func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
@@ -177,7 +177,7 @@ app.Get("/test/use/global", func(req *expressgo.Request, res *expressgo.Response
 
 To mount callbacks as middlewares to the path with all http methods.
 
-The order of declaration matters. The callbacks of `app.[Method]` defined before `app.Use` would be executed before the inserted middlewares using `app.Use`.
+The order of invocation matters. The callbacks of `app.[Method]` defined before `app.Use` would be executed before the inserted middlewares using `app.Use`.
 
 ```go
 app.Use("/test/use", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
@@ -205,6 +205,60 @@ app.Get("/", func(req *expressgo.Request, res *expressgo.Response, next *express
 
 // Request: GET /
 // Respond: Hello from root
+```
+
+## Error Handling
+
+If any error is intended to be handled by other callbacks, set `next.Error = error` to pass the error to any error handler behind.
+
+After an error handler is triggered, the error is seemed as consumed. If the error needs to be passed to another error handler, set `next.Error = error` in the current error handler to pass the error down to the next error handler.
+
+Error handlers are set with similar logics as `app.Use` and `app.UseGlobal`, so the order of invocation matters.
+
+`app.UseError` and `app.UseGlobalError` are often used at the very end of all `app.[Method]` calls.
+
+### app.UseError
+
+To mount an error handler on a path with all http methods.
+
+```go
+app.Get("/test/error", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+    next.Err = errors.New("raised error in /test/error")
+    return // optional, to skip any logics behind
+})
+
+app.UseError("/test/error", func(err error, req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+    res.Send(err.Error())
+})
+
+// Request: GET /test/error
+// Respond: raised error in /test/error
+```
+
+### app.UseGlobalError
+
+To mount an error handler to all routes.
+
+```go
+app.Get("/test/error/1", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+    next.Err = errors.New("raised error in /test/error/1")
+    return // optional, to skip any logics behind
+})
+
+app.Get("/test/error/2", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+    next.Err = errors.New("raised error in /test/error/2")
+    return // optional, to skip any logics behind
+})
+
+app.UseGlobalError(func(err error, req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+    res.Send(err.Error())
+})
+
+// Request: GET /test/error/1
+// Respond: raised error in /test/error/1
+
+// Request: GET /test/error/2
+// Respond: raised error in /test/error/2
 ```
 
 ## TODO
