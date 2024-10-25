@@ -145,11 +145,13 @@ func (app *App) wrapErrorCallbacks(errorCallbacks []ErrorCallback) []Callback {
 	return callbacks
 }
 
+// To mount error handlers on a path with all http methods.
 func (app *App) UseError(path string, errorCallbacks ...ErrorCallback) {
 	callbacks := app.wrapErrorCallbacks(errorCallbacks)
 	app.use(path, callbacks)
 }
 
+// To mount error handlers to all routes.
 func (app *App) UseGlobalError(errorCallbacks ...ErrorCallback) {
 	callbacks := app.wrapErrorCallbacks(errorCallbacks)
 	app.useGlobal(callbacks)

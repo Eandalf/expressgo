@@ -21,15 +21,14 @@ type UserHandler struct {
 	route     string
 }
 
-func (u *UserHandler) createContext(r *http.Request) (*Request, *Response, *Next) {
+func (u *UserHandler) createContext(r *http.Request) (*Request, *Response) {
 	req := &Request{
 		Native: r,
 		Params: map[string]string{},
 		Query:  map[string]string{},
 	}
 	res := &Response{end: false, statusCode: 0, body: ""}
-	next := &Next{Next: false, Route: false}
-	return req, res, next
+	return req, res
 }
 
 func (u *UserHandler) setParams(r *http.Request, req *Request) {
@@ -98,10 +97,12 @@ func (u *UserHandler) runCallbacks(
 	currentCallbackSetIndex int,
 	req *Request,
 	res *Response,
-	next *Next,
 	w http.ResponseWriter,
 ) {
 	for pos, c := range callbacks {
+		// create a new next for each callback
+		next := &Next{Next: false, Route: false, Err: nil}
+
 		c(req, res, next)
 
 		// perform the write, res -> ResponseWriter
@@ -142,7 +143,6 @@ func (u *UserHandler) runCallbacks(
 				currentCallbackSetIndex+1,
 				req,
 				res,
-				&Next{Next: false, Route: false},
 				w,
 			)
 			break
@@ -152,9 +152,6 @@ func (u *UserHandler) runCallbacks(
 		if !next.Next || res.end {
 			break
 		}
-
-		// reset next.Next after finishing a callback
-		next.Next = false
 	}
 }
 
@@ -163,7 +160,7 @@ func (u *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	u.route = r.Pattern
 
 	// prepare custom objects, including req, res, and next
-	req, res, next := u.createContext(r)
+	req, res := u.createContext(r)
 
 	// append params
 	u.setParams(r, req)
@@ -172,5 +169,5 @@ func (u *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	u.setQuery(r, req)
 
 	// execute the callbacks
-	u.runCallbacks(u.callbacks, 0, req, res, next, w)
+	u.runCallbacks(u.callbacks, 0, req, res, w)
 }
