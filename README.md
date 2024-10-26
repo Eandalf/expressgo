@@ -118,7 +118,7 @@ app.Get("/test/query", func(req *expressgo.Request, res *expressgo.Response, nex
 
 #### Body (JSON)
 
-**ExpressGo** provides a package under [github.com/Eandalf/expressgo/bodyparser](github.com/Eandalf/expressgo/bodyparser) for parsing the body of a request.
+**ExpressGo** provides a package under [github.com/Eandalf/expressgo/bodyparser](https://github.com/Eandalf/expressgo/bodyparser) for parsing the body of a request.
 
 `bodyparser.Json()` returns a parser as a middleware to parse received body stream with a specified type into `req.Body`. It defaults to use `expressgo.BodyJsonBase`, which is basically `map[string]interface{}`, as the received JSON type. Custom types could be supplied to the parser through `bodyparser.Json(bodyparser.JsonConfig{Receiver: &Test{}})` where `Test` is the name of the custom type. It is recommended to pass the pointer of the custom struct to `Receiver` option since the underlying decoder is `json.NewDecoder(...).Decode(...)` from **encoding/json**.
 
@@ -297,7 +297,7 @@ app.Post("/test/body/base", bodyparser.Json(), func(req *expressgo.Request, res 
 > 3. While making the path precise, **ExpressGo** actually forces each path to have a trailing slash (/).
 > 4. While an http client sends a request to the originally designated path (`/path`), **net/http** would send a redirect with status code 301 to point to `/path/`.
 > 5. This would cause the client to drop the request body and resend the request through GET method as per status code 301 indicated.
-> 6. Related issue: [golang/go#60769](github.com/golang/go/issues/60769)
+> 6. Related issue: [golang/go#60769](https://github.com/golang/go/issues/60769)
 
 ## Error Handling
 
