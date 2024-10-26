@@ -116,6 +116,64 @@ app.Get("/test/query", func(req *expressgo.Request, res *expressgo.Response, nex
 > 1. Query string would be parsed no matter with which http method.
 > 2. Only the first value of a key from the query string is parsed.
 
+#### Body (JSON)
+
+**ExpressGo** provides a package under [github.com/Eandalf/expressgo/bodyparser](github.com/Eandalf/expressgo/bodyparser) for parsing the body of a request.
+
+`bodyparser.Json()` returns a parser as a middleware to parse received body stream with a specified type into `req.Body`. It defaults to use `expressgo.BodyJsonBase`, which is basically `map[string]interface{}`, as the received JSON type. Custom types could be supplied to the parser through `bodyparser.Json(bodyparser.JsonConfig{Receiver: &Test{}})` where `Test` is the name of the custom type. It is recommended to pass the pointer of the custom struct to `Receiver` option since the underlying decoder is `json.NewDecoder(...).Decode(...)` from **encoding/json**.
+
+The parser leverages **encoding/json**. Hence, the custom struct should follow tag notations used in **encoding/json**.
+
+For example,
+
+```go
+type Test struct {
+    Test string `json:"test"`
+}
+```
+
+To parse JSON with the default struct `expressgo.BodyJsonBase`:
+
+```go
+app.Post("/test/body/base", bodyparser.Json(), func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+    if j, ok := req.Body.(expressgo.BodyBase); ok {
+        if t, ok := j["test"]; ok {
+            if s, ok := t.(string); ok {
+                res.Send(s)
+            }
+        }
+    }
+
+    res.Send("body parsing failed")
+})
+
+// Request: POST /test/body/base
+// Body: '{"test":"test_string"}'
+// Respond: test_string
+```
+
+To parse JSON with a custom struct:
+
+```go
+type Test struct {
+    Test string `json:"test"`
+}
+
+app.Post("/test/body/type", bodyparser.Json(bodyparser.JsonConfig{Receiver: &Test{}}), func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+    if t, ok := req.Body.(*Test); ok {
+        res.Send(t.Test)
+    }
+
+    res.Send("body parsing failed")
+})
+```
+
+> Note:
+>
+> 1. `req.Body` is typed as `interface{}`.
+> 2. Although it is common to set `bodyParser.json()` as a global middleware in **Express.js**, with static type constraints in Go, it is not idiomatic to do so. Since it is common to have callbacks for POST requests expecting different DTOs, it is more suitable to place the JSON parser on each route as shown in the examples above.
+> 3. `bodyparser.Json()` could not be invoked twice on the same route (same method and same path), the parser would consume the body stream, which would lead to nothing left for the coming parser to process.
+
 ### Response
 
 WIP
@@ -124,7 +182,10 @@ WIP
 
 At the current stage, it is still not possible to redifine function behaviors at runtime to mimic `next()` or `next('route')` usages in **Express.js**. Therefore, it is implemented this way to pass in a `*Next` pointer to a callback, so a callback could either use `next.Next = true` to activate the next callback or use `next.Route = true` to activate another list of callbacks defined on the same route. After the aforementioned `next.Next = true` or `next.Route = true` statement, remember to add `return` to exit the current callback if skipping any following logics is needed.
 
-> Note: `route` refers to the combination of `method` and `path`.
+> Note:
+>
+> 1. `route` refers to the combination of `method` and `path`.
+> 2. `next.Next` always takes precedence over `next.Route` if both are set.
 
 To run the next callback:
 
@@ -207,6 +268,37 @@ app.Get("/", func(req *expressgo.Request, res *expressgo.Response, next *express
 // Respond: Hello from root
 ```
 
+### app.Post
+
+For POST requests.
+
+```go
+app.Post("/test/body/base", bodyparser.Json(), func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+    if j, ok := req.Body.(expressgo.BodyBase); ok {
+        if t, ok := j["test"]; ok {
+            if s, ok := t.(string); ok {
+                res.Send(s)
+            }
+        }
+    }
+
+    res.Send("body parsing failed")
+})
+
+// Request: POST /test/body/base
+// Body: '{"test":"test_string"}'
+// Respond: test_string
+```
+
+> Note:
+>
+> 1. Requests from http clients to POST paths need to have the path *very* precise. For example, `app.Post("/test/body/base", ...)` would need the path to be set to `/test/body/base/` in client requests.
+> 2. This is caused by the default behavior of **ExpressGo** to make path precise and the default redirect http status code (301) used by **net/http**.
+> 3. While making the path precise, **ExpressGo** actually forces each path to have a trailing slash (/).
+> 4. While an http client sends a request to the originally designated path (`/path`), **net/http** would send a redirect with status code 301 to point to `/path/`.
+> 5. This would cause the client to drop the request body and resend the request through GET method as per status code 301 indicated.
+> 6. Related issue: [golang/go#60769](github.com/golang/go/issues/60769)
+
 ## Error Handling
 
 If any error is intended to be handled by other callbacks, set `next.Error = error` to pass the error to any error handler behind.
@@ -262,16 +354,6 @@ app.UseGlobalError(func(err error, req *expressgo.Request, res *expressgo.Respon
 ```
 
 ## TODO
-
-### Parse Body JSON
-
-1. parse JSON body if content type is provided
-
-> Check content type: application/json
-> Read body: r.Body
-> Parse json:
-> var j interface{}
-> err = json.NewDecoder(resp.Body).Decode(&j)
 
 ### app.route()
 

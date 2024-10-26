@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Eandalf/expressgo"
+	"github.com/Eandalf/expressgo/bodyparser"
 )
 
 func main() {
@@ -92,6 +93,30 @@ func main() {
 
 	app.Get("/test/error", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 		next.Err = errors.New("raised error in /test/error")
+	})
+
+	app.Post("/test/body/base", bodyparser.Json(), func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		if j, ok := req.Body.(expressgo.BodyJsonBase); ok {
+			if t, ok := j["test"]; ok {
+				if s, ok := t.(string); ok {
+					res.Send(s)
+				}
+			}
+		}
+
+		res.Send("body parsing failed")
+	})
+
+	type Test struct {
+		Test string `json:"test"`
+	}
+
+	app.Post("/test/body/type", bodyparser.Json(bodyparser.JsonConfig{Receiver: &Test{}}), func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		if t, ok := req.Body.(*Test); ok {
+			res.Send(t.Test)
+		}
+
+		res.Send("body parsing failed")
 	})
 
 	app.UseError(

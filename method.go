@@ -124,6 +124,11 @@ func (app *App) Get(path string, callbacks ...Callback) error {
 	return app.handler.register(http.MethodGet, path, &UserHandler{app: app, callbacks: wc})
 }
 
+func (app *App) Post(path string, callbacks ...Callback) error {
+	wc := app.wrapCallbacks(callbacks)
+	return app.handler.register(http.MethodPost, path, &UserHandler{app: app, callbacks: wc})
+}
+
 // Wrap error callbacks into callbacks.
 func (app *App) wrapErrorCallbacks(errorCallbacks []ErrorCallback) []Callback {
 	callbacks := []Callback{}

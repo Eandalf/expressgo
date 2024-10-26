@@ -23,6 +23,18 @@ go fmt
 Write-Host "expressgo: install"
 go install -v
 
+Write-Host "goto: expressgo/bodyparser"
+Push-Location ".\bodyparser"
+
+Write-Host "expressgo/bodyparser: format"
+go fmt
+
+Write-Host "expressgo/bodyparser: install"
+go install -v
+
+Write-Host "goto: expressgo"
+Pop-Location
+
 Write-Host "goto: expressgo/examples/helloworld"
 Push-Location ".\examples\helloworld"
 

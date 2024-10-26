@@ -27,7 +27,11 @@ func (u *UserHandler) createContext(r *http.Request) (*Request, *Response) {
 		Params: map[string]string{},
 		Query:  map[string]string{},
 	}
-	res := &Response{end: false, statusCode: 0, body: ""}
+	res := &Response{
+		end:        false,
+		statusCode: 0,
+		body:       "",
+	}
 	return req, res
 }
 
@@ -127,6 +131,16 @@ func (u *UserHandler) runCallbacks(
 			}
 		}
 
+		// do not proceed if the respond is meant to be sent, even with next.Next ot next.Route is set
+		if res.end {
+			break
+		}
+
+		// next.Next takes precedence over next.Route
+		if next.Next {
+			continue
+		}
+
 		// check next route
 		if next.Route {
 			// ensure the index is not out of the boundary
@@ -149,7 +163,7 @@ func (u *UserHandler) runCallbacks(
 		}
 
 		// check next status
-		if !next.Next || res.end {
+		if !next.Next {
 			break
 		}
 	}
