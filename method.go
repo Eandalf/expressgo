@@ -124,9 +124,44 @@ func (app *App) Get(path string, callbacks ...Callback) error {
 	return app.handler.register(http.MethodGet, path, &UserHandler{app: app, callbacks: wc})
 }
 
+func (app *App) Head(path string, callbacks ...Callback) error {
+	wc := app.wrapCallbacks(callbacks)
+	return app.handler.register(http.MethodHead, path, &UserHandler{app: app, callbacks: wc})
+}
+
 func (app *App) Post(path string, callbacks ...Callback) error {
 	wc := app.wrapCallbacks(callbacks)
 	return app.handler.register(http.MethodPost, path, &UserHandler{app: app, callbacks: wc})
+}
+
+func (app *App) Put(path string, callbacks ...Callback) error {
+	wc := app.wrapCallbacks(callbacks)
+	return app.handler.register(http.MethodPut, path, &UserHandler{app: app, callbacks: wc})
+}
+
+func (app *App) Patch(path string, callbacks ...Callback) error {
+	wc := app.wrapCallbacks(callbacks)
+	return app.handler.register(http.MethodPatch, path, &UserHandler{app: app, callbacks: wc})
+}
+
+func (app *App) Delete(path string, callbacks ...Callback) error {
+	wc := app.wrapCallbacks(callbacks)
+	return app.handler.register(http.MethodDelete, path, &UserHandler{app: app, callbacks: wc})
+}
+
+func (app *App) Connect(path string, callbacks ...Callback) error {
+	wc := app.wrapCallbacks(callbacks)
+	return app.handler.register(http.MethodConnect, path, &UserHandler{app: app, callbacks: wc})
+}
+
+func (app *App) Options(path string, callbacks ...Callback) error {
+	wc := app.wrapCallbacks(callbacks)
+	return app.handler.register(http.MethodOptions, path, &UserHandler{app: app, callbacks: wc})
+}
+
+func (app *App) Trace(path string, callbacks ...Callback) error {
+	wc := app.wrapCallbacks(callbacks)
+	return app.handler.register(http.MethodTrace, path, &UserHandler{app: app, callbacks: wc})
 }
 
 // Wrap error callbacks into callbacks.

@@ -303,6 +303,23 @@ app.Post("/test/body/base", bodyparser.Json(), func(req *expressgo.Request, res 
 > 5. This would cause the client to drop the request body and resend the request through GET method as per status code 301 indicated.
 > 6. Related issue: [golang/go#60769](https://github.com/golang/go/issues/60769)
 
+### Other Methods
+
+- app.Head
+  - `app.Head(string, func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next){})`
+- app.Put
+  - `app.Put(string, func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next){})`
+- app.Patch
+  - `app.Patch(string, func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next){})`
+- app.Delete
+  - `app.Delete(string, func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next){})`
+- app.Connect
+  - `app.Connect(string, func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next){})`
+- app.Options
+  - `app.Options(string, func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next){})`
+- app.Trace
+  - `app.Trace(string, func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next){})`
+
 ## Error Handling
 
 If any error is intended to be handled by other callbacks, set `next.Error = error` to pass the error to any error handler behind.
@@ -358,6 +375,10 @@ app.UseGlobalError(func(err error, req *expressgo.Request, res *expressgo.Respon
 ```
 
 ## TODO
+
+### CORS
+
+1. set CORS-related headers by using a cors middleware
 
 ### app.route()
 
