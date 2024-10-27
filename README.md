@@ -176,7 +176,7 @@ app.Post("/test/body/type", bodyparser.Json(bodyparser.JsonConfig{Receiver: &Tes
 >
 > 1. `req.Body` is typed as `interface{}`.
 > 2. Although it is common to set `bodyParser.json()` as a global middleware in **Express.js**, with static type constraints in Go, it is not idiomatic to do so. Since it is common to have callbacks for POST requests expecting different DTOs, it is more suitable to place the JSON parser on each route as shown in the examples above.
-> 3. `bodyparser.Json()` could not be invoked twice on the same route (same method and same path), the parser would consume the body stream, which would lead to nothing left for the coming parser to process.
+> 3. `bodyparser.Json()` could not be invoked twice on the same route (same method and same path), the parser would consume the body stream, which would lead to nothing left for the coming parser to process. If two JSON parsers are invoked, the second one would be a no-op instead of raising the `io.EOF` error to the next error-handling callback.
 
 ### Response
 

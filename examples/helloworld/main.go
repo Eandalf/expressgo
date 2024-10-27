@@ -135,7 +135,7 @@ func main() {
 		for k, v := range req.Params {
 			output += fmt.Sprintf("%s: %s<br />", k, v)
 		}
-		res.Send(output)
+		res.Send(output + "global error")
 	})
 
 	app.Listen(8080)

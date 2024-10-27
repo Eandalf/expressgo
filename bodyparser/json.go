@@ -2,6 +2,7 @@ package bodyparser
 
 import (
 	"encoding/json"
+	"io"
 
 	"github.com/Eandalf/expressgo"
 )
@@ -19,7 +20,11 @@ func createJsonParser(jsonConfig []JsonConfig) expressgo.Callback {
 				body := jsonConfig[0].Receiver
 				err := json.NewDecoder(req.Native.Body).Decode(body)
 				if err != nil {
-					next.Err = err
+					// if EOF is read, either Body is blank or Body has be consumed by parsers before, then no-op
+					// otherwise, pass the error to error-handling callbacks
+					if err != io.EOF {
+						next.Err = err
+					}
 				} else {
 					req.Body = body
 				}
@@ -36,7 +41,11 @@ func createJsonParser(jsonConfig []JsonConfig) expressgo.Callback {
 				var body expressgo.BodyJsonBase
 				err := json.NewDecoder(req.Native.Body).Decode(&body)
 				if err != nil {
-					next.Err = err
+					// if EOF is read, either Body is blank or Body has be consumed by parsers before, then no-op
+					// otherwise, pass the error to error-handling callbacks
+					if err != io.EOF {
+						next.Err = err
+					}
 				} else {
 					req.Body = body
 				}
