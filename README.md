@@ -147,7 +147,7 @@ app.Post("/test/body/base", bodyparser.Json(), func(req *expressgo.Request, res 
     res.Send("body parsing failed")
 })
 
-// Request: POST /test/body/base
+// Request: POST /test/body/base/
 // Body: '{"test":"test_string"}'
 // Respond: test_string
 ```
@@ -166,6 +166,10 @@ app.Post("/test/body/type", bodyparser.Json(bodyparser.JsonConfig{Receiver: &Tes
 
     res.Send("body parsing failed")
 })
+
+// Request: POST /test/body/type/
+// Body: '{"test":"test_string"}'
+// Respond: test_string
 ```
 
 > Note:
@@ -285,7 +289,7 @@ app.Post("/test/body/base", bodyparser.Json(), func(req *expressgo.Request, res 
     res.Send("body parsing failed")
 })
 
-// Request: POST /test/body/base
+// Request: POST /test/body/base/
 // Body: '{"test":"test_string"}'
 // Respond: test_string
 ```
