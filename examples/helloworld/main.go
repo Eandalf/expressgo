@@ -6,6 +6,7 @@ import (
 
 	"github.com/Eandalf/expressgo"
 	"github.com/Eandalf/expressgo/bodyparser"
+	"github.com/Eandalf/expressgo/cors"
 )
 
 func main() {
@@ -15,6 +16,8 @@ func main() {
 	app := expressgo.CreateServer(config)
 
 	// app.Set("case sensitive routing", true)
+
+	app.UseGlobal(cors.Use())
 
 	app.UseGlobal(func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 		req.Params["global"] = "global"
@@ -31,6 +34,29 @@ func main() {
 
 	app.Get("/test/end", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 		res.End()
+	})
+
+	app.Get("/test/req/get", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		res.Send(req.Get("Accept"))
+	})
+
+	app.Get("/test/req/header", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		res.Send(req.Header("Accept"))
+	})
+
+	app.Get("/test/res/set", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		res.Set("Access-Control-Allow-Origin", "example.com")
+		res.Set("Access-Control-Allow-Origin", "*")
+	})
+
+	app.Get("/test/res/get", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		res.Set("Access-Control-Allow-Origin", "*")
+		res.Send(res.Get("Access-Control-Allow-Origin"))
+	})
+
+	app.Get("/test/res/append", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		res.Append("Access-Control-Allow-Origin", "example.com")
+		res.Append("Access-Control-Allow-Origin", "google.com")
 	})
 
 	app.Get("127.0.0.1/test/host", func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {

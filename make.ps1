@@ -35,6 +35,18 @@ go install -v
 Write-Host "goto: expressgo"
 Pop-Location
 
+Write-Host "goto: expressgo/cors"
+Push-Location ".\cors"
+
+Write-Host "expressgo/cors: format"
+go fmt
+
+Write-Host "expressgo/cors: install"
+go install -v
+
+Write-Host "goto: expressgo"
+Pop-Location
+
 Write-Host "goto: expressgo/examples/helloworld"
 Push-Location ".\examples\helloworld"
 

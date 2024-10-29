@@ -178,9 +178,96 @@ app.Post("/test/body/type", bodyparser.Json(bodyparser.JsonConfig{Receiver: &Tes
 > 2. Although it is common to set `bodyParser.json()` as a global middleware in **Express.js**, with static type constraints in Go, it is not idiomatic to do so. Since it is common to have callbacks for POST requests expecting different DTOs, it is more suitable to place the JSON parser on each route as shown in the examples above.
 > 3. `bodyparser.Json()` could not be invoked twice on the same route (same method and same path), the parser would consume the body stream, which would lead to nothing left for the coming parser to process. If two JSON parsers are invoked, the second one would be a no-op instead of raising the `io.EOF` error to the next error-handling callback.
 
+#### req.Get
+
+`req.Get(string)`
+
+Get a request header specified by the field. The field is case-insensitive.
+
+#### req.Header
+
+`req.Header(string)`
+
+Alias of req.Get(string).
+
 ### Response
 
-WIP
+#### res.Send
+
+`res.Send(string)`
+
+Send the response.
+
+#### res.SendStatus
+
+`res.SendStatus(int)`
+
+Send the response with a status code.
+
+#### res.Status
+
+`res.Status(int)`
+
+Set the HTTP status code of the response. It is chainable.
+
+#### res.End
+
+`res.End()`
+
+Stop further writes to the response.
+
+#### res.Append
+
+`res.Append(string, string)`
+
+Add a value to a response header, field: value. The field is case-insensitive.
+
+#### res.Set
+
+`res.Set(string, string)`
+
+Set a response header, field: value. The field is case-insensitive.
+
+#### res.Get
+
+`res.Get(string)`
+
+Get a response header specified by the field. The field is case-insensitive.
+
+#### CORS
+
+**ExpressGo** provides a package under [github.com/Eandalf/expressgo/cors](https://github.com/Eandalf/expressgo/cors) for setting CORS-related headers of a response.
+
+```go
+// set a global CORS middleware
+app.UseGlobal(cors.Use())
+
+// set a per route CORS middleware
+app.Get("/path", cors.Use(), func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {})
+
+// set options by using cors.CorsConfig{}
+app.UseGlobal(cors.Use(cors.CorsConfig{ /* options */ }))
+
+```
+
+Reference: [cors configuration options](https://expressjs.com/en/resources/middleware/cors.html#configuration-options).
+
+Option Table:
+
+| cors | expressgo/cors |
+| ---------- | ---------- |
+| origin (String) | Origin |
+| origin (Boolean) | OriginBool |
+| origin (RegExp ) | OriginRegExp |
+| origin (Array) | Origins |
+| methods (String) | Methods |
+| methods (Array) | MethodSlice |
+| allowedHeaders | AllowedHeaders |
+| exposedHeaders | ExposedHeaders |
+| credentials | Credentials |
+| maxAge | MaxAge |
+| preflightContinue | PreflightContinue |
+| optionsSuccessStatus | OptionsSuccessStatus |
 
 ### Next
 
@@ -375,10 +462,6 @@ app.UseGlobalError(func(err error, req *expressgo.Request, res *expressgo.Respon
 ```
 
 ## TODO
-
-### CORS
-
-1. set CORS-related headers by using a cors middleware
 
 ### app.route()
 
