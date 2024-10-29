@@ -1,6 +1,9 @@
 package expressgo
 
-import "net/http"
+import (
+	"net/http"
+	"strings"
+)
 
 type Request struct {
 	Native *http.Request
@@ -11,3 +14,14 @@ type Request struct {
 }
 
 type BodyJsonBase map[string]interface{}
+
+// Get a request header specified by the field. The field is case-insensitive.
+func (req *Request) Get(field string) string {
+	values := req.Native.Header.Values(field)
+	return strings.Join(values, ",")
+}
+
+// Alias of req.Get(string).
+func (req *Request) Header(field string) string {
+	return req.Get(field)
+}

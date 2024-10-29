@@ -21,13 +21,14 @@ type UserHandler struct {
 	route     string
 }
 
-func (u *UserHandler) createContext(r *http.Request) (*Request, *Response) {
+func (u *UserHandler) createContext(r *http.Request, w http.ResponseWriter) (*Request, *Response) {
 	req := &Request{
 		Native: r,
 		Params: map[string]string{},
 		Query:  map[string]string{},
 	}
 	res := &Response{
+		native:     w,
 		end:        false,
 		statusCode: 0,
 		body:       "",
@@ -137,7 +138,9 @@ func (u *UserHandler) runCallbacks(
 		}
 
 		// next.Next takes precedence over next.Route
-		if next.Next {
+		// next.Next is meaningless with the last callback in the current callback list
+		// this check is implemented to have next.Route in effect with the last callback
+		if next.Next && pos != (len(callbacks)-1) {
 			continue
 		}
 
@@ -174,7 +177,7 @@ func (u *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	u.route = r.Pattern
 
 	// prepare custom objects, including req, res, and next
-	req, res := u.createContext(r)
+	req, res := u.createContext(r, w)
 
 	// append params
 	u.setParams(r, req)
