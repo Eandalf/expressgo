@@ -269,6 +269,26 @@ func (h *Handler) register(method string, path string, handler *UserHandler) err
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// apply config options
+
+	// for precise path matching with 301 instead of 308 returned
+	//
+	// > 1. Requests from http clients to POST paths need to have the path *very* precise. For example, `app.Post("/test/body/base", ...)` would need the path to be set to `/test/body/base/` in client requests.
+	// > 2. This is caused by the default behavior of **ExpressGo** to make path precise and the default redirect http status code (301) used by **net/http**.
+	// > 3. While making the path precise, **ExpressGo** actually forces each path to have a trailing slash (/).
+	// > 4. While an http client sends a request to the originally designated path (`/path`), **net/http** would send a redirect with status code 301 to point to `/path/`.
+	// > 5. This would cause the client to drop the request body and resend the request through GET method as per status code 301 indicated.
+	// > 6. Related issue: [golang/go#60769](https://github.com/golang/go/issues/60769)
+	//
+	// This check should be removed once the issue above being implemented.
+	if !h.app.config.coarse {
+		path := r.URL.Path
+		lastChar := path[len(path)-1:]
+		if lastChar != "/" {
+			r.URL.Path = path + "/"
+		}
+	}
+
+	// for case-insensitive path matching
 	if !h.app.config.caseSensitive {
 		r.URL.Path = strings.ToLower(r.URL.Path)
 	}
