@@ -16,7 +16,7 @@ func createJsonParser(jsonConfig []JsonConfig) expressgo.Callback {
 	if len(jsonConfig) > 0 {
 		parser = func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 			// only intercept the request body if Content-Type is set to application/json
-			if req.Native.Header.Get("Content-Type") == "application/json" {
+			if isContentType(req.Native.Header.Get("Content-Type"), "application/json") {
 				body := jsonConfig[0].Receiver
 				err := json.NewDecoder(req.Native.Body).Decode(body)
 				if err != nil {
@@ -37,7 +37,7 @@ func createJsonParser(jsonConfig []JsonConfig) expressgo.Callback {
 	} else {
 		parser = func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 			// only intercept the request body if Content-Type is set to application/json
-			if req.Native.Header.Get("Content-Type") == "application/json" {
+			if isContentType(req.Native.Header.Get("Content-Type"), "application/json") {
 				var body expressgo.BodyJsonBase
 				err := json.NewDecoder(req.Native.Body).Decode(&body)
 				if err != nil {
