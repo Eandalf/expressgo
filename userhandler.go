@@ -1,6 +1,7 @@
 package expressgo
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -96,6 +97,23 @@ func (u *UserHandler) setQuery(r *http.Request, req *Request) {
 	}
 }
 
+// Run a callback, for recovering an error
+func (u *UserHandler) runCallback(
+	c Callback,
+	req *Request,
+	res *Response,
+	next *Next,
+) {
+	// recover from panic of callbacks
+	defer func() {
+		if r := recover(); r != nil {
+			next.Err = fmt.Errorf("%#v", r)
+		}
+	}()
+
+	c(req, res, next)
+}
+
 // Go through callbacks
 func (u *UserHandler) runCallbacks(
 	callbacks []Callback,
@@ -108,7 +126,7 @@ func (u *UserHandler) runCallbacks(
 		// create a new next for each callback
 		next := &Next{Next: false, Route: false, Err: nil}
 
-		c(req, res, next)
+		u.runCallback(c, req, res, next)
 
 		// perform the write, res -> ResponseWriter
 		if res.statusCode != 0 {
