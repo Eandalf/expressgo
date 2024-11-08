@@ -10,12 +10,14 @@ import (
 )
 
 type CorsConfig struct {
-	Origin               string
-	Origins              []string
-	OriginRegExp         *regexp.Regexp
-	OriginBool           bool
-	Methods              string
-	MethodSlice          []string
+	Origin               any
+	originString         string
+	originSlice          []string
+	originRegExp         *regexp.Regexp
+	originBool           bool
+	Methods              any
+	methodString         string
+	methodSlice          []string
 	AllowedHeaders       []string
 	ExposedHeaders       []string
 	Credentials          bool
@@ -27,10 +29,10 @@ type CorsConfig struct {
 func Use(corsConfig ...CorsConfig) expressgo.Callback {
 	// the default config
 	config := CorsConfig{
-		Origin:               "*",
-		Origins:              []string{},
-		Methods:              "GET,HEAD,PUT,PATCH,POST,DELETE",
-		MethodSlice:          []string{},
+		originString:         "*",
+		originSlice:          []string{},
+		methodString:         "GET,HEAD,PUT,PATCH,POST,DELETE",
+		methodSlice:          []string{},
 		AllowedHeaders:       []string{},
 		ExposedHeaders:       []string{},
 		PreflightContinue:    false,
@@ -41,27 +43,20 @@ func Use(corsConfig ...CorsConfig) expressgo.Callback {
 	if len(corsConfig) > 0 {
 		userConfig := corsConfig[0]
 
-		if userConfig.Origin != "" {
-			config.Origin = userConfig.Origin
-		}
-		if len(userConfig.Origins) > 0 {
-			config.Origins = userConfig.Origins
-			config.Origin = ""
-		}
-		if userConfig.OriginRegExp != nil {
-			config.OriginRegExp = userConfig.OriginRegExp
-			config.Origin = ""
-		}
-		if userConfig.OriginBool {
-			config.OriginBool = userConfig.OriginBool
-			config.Origin = ""
+		if o, ok := userConfig.Origin.(string); ok && o != "" {
+			config.originString = o
+		} else if os, ok := userConfig.Origin.([]string); ok && len(os) > 0 {
+			config.originSlice = os
+		} else if or, ok := userConfig.Origin.(*regexp.Regexp); ok && or != nil {
+			config.originRegExp = or
+		} else if ob, ok := userConfig.Origin.(bool); ok && ob {
+			config.originBool = ob
 		}
 
-		if userConfig.Methods != "" {
-			config.Methods = userConfig.Methods
-		}
-		if len(userConfig.MethodSlice) > 0 {
-			config.MethodSlice = userConfig.MethodSlice
+		if ms, ok := userConfig.Methods.([]string); ok && len(ms) > 0 {
+			config.methodSlice = ms
+		} else if m, ok := userConfig.Methods.(string); ok && m != "" {
+			config.methodString = m
 		}
 
 		if len(userConfig.AllowedHeaders) > 0 {
@@ -88,15 +83,10 @@ func Use(corsConfig ...CorsConfig) expressgo.Callback {
 	// create CORS middleware
 	cors := func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 		// set Access-Control-Allow-Origin
-		if config.Origin == "*" {
-			res.Set("Access-Control-Allow-Origin", config.Origin)
-		} else if config.Origin != "" {
-			res.Set("Access-Control-Allow-Origin", config.Origin)
-			res.Append("Vary", "Origin")
-		} else if len(config.Origins) > 0 {
+		if len(config.originSlice) > 0 {
 			origin := req.Get("Origin")
 			if origin != "" {
-				for _, o := range config.Origins {
+				for _, o := range config.originSlice {
 					if o == origin {
 						res.Set("Access-Control-Allow-Origin", origin)
 						res.Append("Vary", "Origin")
@@ -104,16 +94,21 @@ func Use(corsConfig ...CorsConfig) expressgo.Callback {
 					}
 				}
 			}
-		} else if config.OriginRegExp != nil {
+		} else if config.originRegExp != nil {
 			origin := req.Get("Origin")
-			if origin != "" && config.OriginRegExp.MatchString(origin) {
+			if origin != "" && config.originRegExp.MatchString(origin) {
 				res.Set("Access-Control-Allow-Origin", origin)
 				res.Append("Vary", "Origin")
 			}
-		} else if config.OriginBool {
+		} else if config.originBool {
 			origin := req.Get("Origin")
 			if origin != "" {
 				res.Set("Access-Control-Allow-Origin", origin)
+				res.Append("Vary", "Origin")
+			}
+		} else {
+			res.Set("Access-Control-Allow-Origin", config.originString)
+			if config.originString != "*" {
 				res.Append("Vary", "Origin")
 			}
 		}
@@ -135,11 +130,11 @@ func Use(corsConfig ...CorsConfig) expressgo.Callback {
 			// for preflights
 
 			// set Access-Control-Allow-Methods
-			if len(config.MethodSlice) > 0 {
-				m := strings.Join(config.MethodSlice, ",")
+			if len(config.methodSlice) > 0 {
+				m := strings.Join(config.methodSlice, ",")
 				res.Set("Access-Control-Allow-Methods", m)
-			} else if config.Methods != "" {
-				res.Set("Access-Control-Allow-Methods", config.Methods)
+			} else if config.methodString != "" {
+				res.Set("Access-Control-Allow-Methods", config.methodString)
 			}
 
 			// set Access-Control-Allow-Headers

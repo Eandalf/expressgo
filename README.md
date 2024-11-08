@@ -256,12 +256,8 @@ Option Table:
 
 | cors | expressgo/cors |
 | ---------- | ---------- |
-| origin (String) | Origin |
-| origin (Boolean) | OriginBool |
-| origin (RegExp ) | OriginRegExp |
-| origin (Array) | Origins |
-| methods (String) | Methods |
-| methods (Array) | MethodSlice |
+| origin (String/Boolean/RegExp/Array) | Origin (string/bool/*regexp.Regexp/[]string) |
+| methods (String/Array) | Methods (string/[]string) |
 | allowedHeaders | AllowedHeaders |
 | exposedHeaders | ExposedHeaders |
 | credentials | Credentials |
