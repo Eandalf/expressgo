@@ -1,8 +1,10 @@
 package expressgo
 
 import (
+	"flag"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 )
 
@@ -53,6 +55,17 @@ func CreateServer(config ...Config) App {
 }
 
 func (app *App) Listen(port int) {
+	// set APP_ENV with the shell level env
+	app.Set(configKeyAppEnv, os.Getenv("APP_ENV"))
+
+	// set APP_ENV with the command level env
+	var appEnv string
+	flag.StringVar(&appEnv, "mode", "", "APP_ENV")
+	flag.Parse()
+	if appEnv != "" {
+		app.Set(configKeyAppEnv, appEnv)
+	}
+
 	log.Println("expressgo listens to port: " + strconv.Itoa(port))
 	err := http.ListenAndServe(":"+strconv.Itoa(port), app.handler)
 	if err != nil {

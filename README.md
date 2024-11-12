@@ -14,6 +14,7 @@ ExpressGo leveraged **ServeMux** in **net/http** and would create a custom **Ser
 2. All path matching is precise.
 3. Path matching is case insensitive.
 4. Defining multiple lists of callbacks on the same route is allowed.
+5. Panics from callbacks would be recovered as an error and sent to error-handling callbacks.
 
 To alter the behavior back to defaults of **net/http**:
 
@@ -25,6 +26,12 @@ config.Coarse = true // to opt-out precise path matching
 app := expressgo.CreateServer(config)
 app.Set("case sensitive routing", true) // to use case sensitive path matching
 ```
+
+To propagate panics in development mode:
+
+- set `APP_ENV=development` in env
+- set `-mode=development` in flags (command arguments)
+- use `app.Set("APP_ENV", "development")`
 
 ## Usage
 

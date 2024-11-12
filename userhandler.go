@@ -106,8 +106,11 @@ func (u *UserHandler) runCallback(
 ) {
 	// recover from panic of callbacks
 	defer func() {
-		if r := recover(); r != nil {
-			next.Err = fmt.Errorf("%#v", r)
+		// do not recover in development environments
+		if appEnv, ok := u.app.GetData(configKeyAppEnv).(string); ok && appEnv != "development" {
+			if r := recover(); r != nil {
+				next.Err = fmt.Errorf("%#v", r)
+			}
 		}
 	}()
 

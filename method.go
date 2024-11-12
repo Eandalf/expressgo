@@ -5,6 +5,7 @@ import (
 )
 
 const (
+	configKeyAppEnv        = "APP_ENV"
 	configKeyCaseSensitive = "case sensitive routing"
 )
 
