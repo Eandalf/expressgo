@@ -12,7 +12,8 @@ type JsonConfig struct {
 }
 
 func createJsonParser(jsonConfig []JsonConfig) expressgo.Callback {
-	var parser func(*expressgo.Request, *expressgo.Response, *expressgo.Next)
+	var parser expressgo.Callback
+
 	if len(jsonConfig) > 0 {
 		parser = func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 			// only intercept the request body if Content-Type is set to application/json

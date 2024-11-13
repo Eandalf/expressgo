@@ -145,6 +145,13 @@ func main() {
 		res.Send("body parsing failed")
 	})
 
+	app.Post("/test/body/raw", bodyparser.Raw(), func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		if b, ok := req.Body.([]byte); ok {
+			s := string(b)
+			res.Send(s)
+		}
+	})
+
 	app.UseError(
 		"/test/error",
 		func(err error, req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {

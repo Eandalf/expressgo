@@ -15,3 +15,7 @@ func isContentType(value string, expectedType string) bool {
 func Json(jsonConfig ...JsonConfig) expressgo.Callback {
 	return createJsonParser(jsonConfig)
 }
+
+func Raw(rawConfig ...RawConfig) expressgo.Callback {
+	return createRawParser(rawConfig)
+}
