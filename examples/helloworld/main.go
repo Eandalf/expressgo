@@ -152,6 +152,12 @@ func main() {
 		}
 	})
 
+	app.Post("/test/body/text", bodyparser.Text(), func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		if s, ok := req.Body.(string); ok {
+			res.Send(s)
+		}
+	})
+
 	app.UseError(
 		"/test/error",
 		func(err error, req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {

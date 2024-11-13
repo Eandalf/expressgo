@@ -19,3 +19,7 @@ func Json(jsonConfig ...JsonConfig) expressgo.Callback {
 func Raw(rawConfig ...RawConfig) expressgo.Callback {
 	return createRawParser(rawConfig)
 }
+
+func Text(textConfig ...TextConfig) expressgo.Callback {
+	return createTextParser(textConfig)
+}
