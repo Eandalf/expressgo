@@ -168,11 +168,7 @@ func main() {
 	)
 
 	app.UseGlobalError(func(err error, req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
-		output := ""
-		for k, v := range req.Params {
-			output += fmt.Sprintf("%s: %s<br />", k, v)
-		}
-		res.Send(output + "global error")
+		res.Send("global error: " + err.Error())
 	})
 
 	app.Listen(8080)

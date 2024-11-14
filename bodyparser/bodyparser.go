@@ -1,8 +1,6 @@
 package bodyparser
 
 import (
-	"io"
-	"regexp"
 	"strings"
 
 	"github.com/Eandalf/expressgo"
@@ -23,45 +21,6 @@ func isContentType(value string, expectedType any) bool {
 	}
 
 	return false
-}
-
-var charsetMatch = regexp.MustCompile(`charset=([-\w]+)`)
-
-// get charset from http header content-type
-func getCharset(value string) string {
-	values := strings.Split(value, ";")
-	for _, v := range values {
-		matches := charsetMatch.FindStringSubmatch(v)
-		if len(matches) == 2 {
-			return strings.ToLower(matches[1])
-		}
-	}
-
-	// default to utf-8
-	return "utf-8"
-}
-
-type Verify func(*expressgo.Request, *expressgo.Response, []byte, string) error
-
-type readOption struct {
-	limit    int64
-	req      *expressgo.Request
-	res      *expressgo.Response
-	encoding string
-	verify   Verify
-}
-
-// read the body stream
-func read(r io.Reader, option *readOption) io.Reader {
-	return &reader{
-		r,
-		option.limit,
-		option.req,
-		option.res,
-		option.encoding,
-		option.verify,
-		false,
-	}
 }
 
 func Json(jsonConfig ...JsonConfig) expressgo.Callback {

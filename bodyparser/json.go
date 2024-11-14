@@ -11,6 +11,7 @@ import (
 type JsonConfig struct {
 	Receiver any
 	Type     any
+	Inflate  bool
 	Limit    any
 	limitNum int64
 	Verify   Verify
@@ -20,6 +21,7 @@ func createJsonParser(jsonConfig []JsonConfig) expressgo.Callback {
 	config := JsonConfig{
 		Receiver: &expressgo.BodyJsonBase{},
 		Type:     "application/json",
+		Inflate:  true,
 		Limit:    "100kb",
 	}
 
@@ -31,6 +33,9 @@ func createJsonParser(jsonConfig []JsonConfig) expressgo.Callback {
 		}
 		if userConfig.Type != nil {
 			config.Type = userConfig.Type
+		}
+		if !userConfig.Inflate {
+			config.Inflate = userConfig.Inflate
 		}
 		if userConfig.Limit != nil {
 			config.Limit = userConfig.Limit
@@ -45,15 +50,25 @@ func createJsonParser(jsonConfig []JsonConfig) expressgo.Callback {
 	parser := func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 		// only intercept the request body if Content-Type is set to application/json
 		if isContentType(req.Native.Header.Get("Content-Type"), config.Type) {
-			body := config.Receiver
-			err := json.NewDecoder(read(req.Native.Body, &readOption{
-				config.limitNum,
-				req,
-				res,
-				getCharset(req.Native.Header.Get("Content-Type")),
-				config.Verify,
-			})).Decode(body)
+			stream, sErr := getStream(
+				req.Native.Body,
+				&readOption{
+					config.Inflate,
+					config.limitNum,
+					req,
+					res,
+					config.Verify,
+				},
+				req.Native.Header.Get("Content-Encoding"),
+				req.Native.Header.Get("Content-Type"),
+			)
+			if sErr != nil {
+				next.Err = sErr
+				return
+			}
 
+			body := config.Receiver
+			err := json.NewDecoder(stream).Decode(body)
 			if err != nil {
 				// if EOF is read, either Body is blank or Body has be consumed by parsers before, then no-op
 				// otherwise, pass the error to error-handling callbacks

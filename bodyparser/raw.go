@@ -8,6 +8,7 @@ import (
 
 type RawConfig struct {
 	Type     any
+	Inflate  bool
 	Limit    any
 	limitNum int64
 	Verify   Verify
@@ -15,8 +16,9 @@ type RawConfig struct {
 
 func createRawParser(rawConfig []RawConfig) expressgo.Callback {
 	config := RawConfig{
-		Type:  "application/octet-stream",
-		Limit: "100kb",
+		Type:    "application/octet-stream",
+		Inflate: true,
+		Limit:   "100kb",
 	}
 
 	if len(rawConfig) > 0 {
@@ -24,6 +26,9 @@ func createRawParser(rawConfig []RawConfig) expressgo.Callback {
 
 		if userConfig.Type != nil {
 			config.Type = userConfig.Type
+		}
+		if !userConfig.Inflate {
+			config.Inflate = userConfig.Inflate
 		}
 		if userConfig.Limit != nil {
 			config.Limit = userConfig.Limit
@@ -37,13 +42,24 @@ func createRawParser(rawConfig []RawConfig) expressgo.Callback {
 
 	parser := func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 		if isContentType(req.Native.Header.Get("Content-Type"), config.Type) {
-			body, err := io.ReadAll(read(req.Native.Body, &readOption{
-				config.limitNum,
-				req,
-				res,
-				getCharset(req.Native.Header.Get("Content-Type")),
-				config.Verify,
-			}))
+			stream, sErr := getStream(
+				req.Native.Body,
+				&readOption{
+					config.Inflate,
+					config.limitNum,
+					req,
+					res,
+					config.Verify,
+				},
+				req.Native.Header.Get("Content-Encoding"),
+				req.Native.Header.Get("Content-Type"),
+			)
+			if sErr != nil {
+				next.Err = sErr
+				return
+			}
+
+			body, err := io.ReadAll(stream)
 
 			if err != nil {
 				next.Err = err
