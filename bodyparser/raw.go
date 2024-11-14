@@ -6,43 +6,37 @@ import (
 	"github.com/Eandalf/expressgo"
 )
 
-type RawConfig struct{}
+type RawConfig struct {
+	Type any
+}
 
 func createRawParser(rawConfig []RawConfig) expressgo.Callback {
-	var parser expressgo.Callback
+	config := RawConfig{
+		Type: "application/octet-stream",
+	}
 
 	if len(rawConfig) > 0 {
-		parser = func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
-			if isContentType(req.Native.Header.Get("Content-Type"), "application/octet-stream") {
-				body, err := io.ReadAll(req.Native.Body)
+		userConfig := rawConfig[0]
 
-				if err != nil {
-					next.Err = err
-				} else {
-					req.Body = body
-				}
-			}
-
-			// proceed to the next callback
-			next.Next = true
-			next.Route = true
+		if userConfig.Type != nil {
+			config.Type = userConfig.Type
 		}
-	} else {
-		parser = func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
-			if isContentType(req.Native.Header.Get("Content-Type"), "application/octet-stream") {
-				body, err := io.ReadAll(req.Native.Body)
+	}
 
-				if err != nil {
-					next.Err = err
-				} else {
-					req.Body = body
-				}
+	parser := func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		if isContentType(req.Native.Header.Get("Content-Type"), config.Type) {
+			body, err := io.ReadAll(req.Native.Body)
+
+			if err != nil {
+				next.Err = err
+			} else {
+				req.Body = body
 			}
-
-			// proceed to the next callback
-			next.Next = true
-			next.Route = true
 		}
+
+		// proceed to the next callback
+		next.Next = true
+		next.Route = true
 	}
 
 	return parser
