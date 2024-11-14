@@ -10,6 +10,7 @@ type RawConfig struct {
 	Type     any
 	Limit    any
 	limitNum int64
+	Verify   Verify
 }
 
 func createRawParser(rawConfig []RawConfig) expressgo.Callback {
@@ -27,13 +28,22 @@ func createRawParser(rawConfig []RawConfig) expressgo.Callback {
 		if userConfig.Limit != nil {
 			config.Limit = userConfig.Limit
 		}
+		if userConfig.Verify != nil {
+			config.Verify = userConfig.Verify
+		}
 	}
 
 	config.limitNum = parseByte(config.Limit)
 
 	parser := func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 		if isContentType(req.Native.Header.Get("Content-Type"), config.Type) {
-			body, err := io.ReadAll(read(req.Native.Body, config.limitNum))
+			body, err := io.ReadAll(read(req.Native.Body, &readOption{
+				config.limitNum,
+				req,
+				res,
+				getCharset(req.Native.Header.Get("Content-Type")),
+				config.Verify,
+			}))
 
 			if err != nil {
 				next.Err = err

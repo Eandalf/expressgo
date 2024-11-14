@@ -13,6 +13,7 @@ type JsonConfig struct {
 	Type     any
 	Limit    any
 	limitNum int64
+	Verify   Verify
 }
 
 func createJsonParser(jsonConfig []JsonConfig) expressgo.Callback {
@@ -34,6 +35,9 @@ func createJsonParser(jsonConfig []JsonConfig) expressgo.Callback {
 		if userConfig.Limit != nil {
 			config.Limit = userConfig.Limit
 		}
+		if userConfig.Verify != nil {
+			config.Verify = userConfig.Verify
+		}
 	}
 
 	config.limitNum = parseByte(config.Limit)
@@ -42,7 +46,13 @@ func createJsonParser(jsonConfig []JsonConfig) expressgo.Callback {
 		// only intercept the request body if Content-Type is set to application/json
 		if isContentType(req.Native.Header.Get("Content-Type"), config.Type) {
 			body := config.Receiver
-			err := json.NewDecoder(read(req.Native.Body, config.limitNum)).Decode(body)
+			err := json.NewDecoder(read(req.Native.Body, &readOption{
+				config.limitNum,
+				req,
+				res,
+				getCharset(req.Native.Header.Get("Content-Type")),
+				config.Verify,
+			})).Decode(body)
 
 			if err != nil {
 				// if EOF is read, either Body is blank or Body has be consumed by parsers before, then no-op

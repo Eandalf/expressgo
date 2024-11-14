@@ -1,8 +1,8 @@
 package bodyparser
 
 import (
-	"errors"
 	"io"
+	"regexp"
 	"strings"
 
 	"github.com/Eandalf/expressgo"
@@ -25,32 +25,43 @@ func isContentType(value string, expectedType any) bool {
 	return false
 }
 
-type limitedReader struct {
-	// underlying reader
-	R io.Reader
-	// max bytes remaining
-	N int64
+var charsetMatch = regexp.MustCompile(`charset=([-\w]+)`)
+
+// get charset from http header content-type
+func getCharset(value string) string {
+	values := strings.Split(value, ";")
+	for _, v := range values {
+		matches := charsetMatch.FindStringSubmatch(v)
+		if len(matches) == 2 {
+			return strings.ToLower(matches[1])
+		}
+	}
+
+	// default to utf-8
+	return "utf-8"
 }
 
-var ErrCtl = errors.New("content too large")
+type Verify func(*expressgo.Request, *expressgo.Response, []byte, string) error
 
-func (l *limitedReader) Read(p []byte) (n int, err error) {
-	if l.N <= 0 {
-		return 0, io.EOF
-	}
-
-	if int64(len(p)) > l.N {
-		return 0, ErrCtl
-	}
-
-	n, err = l.R.Read(p)
-	l.N -= int64(n)
-	return
+type readOption struct {
+	limit    int64
+	req      *expressgo.Request
+	res      *expressgo.Response
+	encoding string
+	verify   Verify
 }
 
 // read the body stream
-func read(r io.Reader, limit int64) io.Reader {
-	return &limitedReader{r, limit}
+func read(r io.Reader, option *readOption) io.Reader {
+	return &reader{
+		r,
+		option.limit,
+		option.req,
+		option.res,
+		option.encoding,
+		option.verify,
+		false,
+	}
 }
 
 func Json(jsonConfig ...JsonConfig) expressgo.Callback {
