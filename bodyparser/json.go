@@ -11,12 +11,15 @@ import (
 type JsonConfig struct {
 	Receiver any
 	Type     any
+	Limit    any
+	limitNum int64
 }
 
 func createJsonParser(jsonConfig []JsonConfig) expressgo.Callback {
 	config := JsonConfig{
 		Receiver: &expressgo.BodyJsonBase{},
 		Type:     "application/json",
+		Limit:    "100kb",
 	}
 
 	if len(jsonConfig) > 0 {
@@ -28,13 +31,18 @@ func createJsonParser(jsonConfig []JsonConfig) expressgo.Callback {
 		if userConfig.Type != nil {
 			config.Type = userConfig.Type
 		}
+		if userConfig.Limit != nil {
+			config.Limit = userConfig.Limit
+		}
 	}
+
+	config.limitNum = parseByte(config.Limit)
 
 	parser := func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 		// only intercept the request body if Content-Type is set to application/json
 		if isContentType(req.Native.Header.Get("Content-Type"), config.Type) {
 			body := config.Receiver
-			err := json.NewDecoder(req.Native.Body).Decode(body)
+			err := json.NewDecoder(read(req.Native.Body, config.limitNum)).Decode(body)
 
 			if err != nil {
 				// if EOF is read, either Body is blank or Body has be consumed by parsers before, then no-op

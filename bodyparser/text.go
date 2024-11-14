@@ -7,12 +7,15 @@ import (
 )
 
 type TextConfig struct {
-	Type any
+	Type     any
+	Limit    any
+	limitNum int64
 }
 
 func createTextParser(textConfig []TextConfig) expressgo.Callback {
 	config := TextConfig{
-		Type: "text/plain",
+		Type:  "text/plain",
+		Limit: "100kb",
 	}
 
 	if len(textConfig) > 0 {
@@ -21,11 +24,16 @@ func createTextParser(textConfig []TextConfig) expressgo.Callback {
 		if userConfig.Type != nil {
 			config.Type = userConfig.Type
 		}
+		if userConfig.Limit != nil {
+			config.Limit = userConfig.Limit
+		}
 	}
+
+	config.limitNum = parseByte(config.Limit)
 
 	parser := func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 		if isContentType(req.Native.Header.Get("Content-Type"), config.Type) {
-			body, err := io.ReadAll(req.Native.Body)
+			body, err := io.ReadAll(read(req.Native.Body, config.limitNum))
 
 			if err != nil {
 				next.Err = err

@@ -189,6 +189,7 @@ Config options:
 bodyparser.JsonConfig{
     Receiver: any // pointer to the receiving struct
     Type: any // expected type: string or []string
+    Limit: any // expected type: int64 or string
 }
 ```
 
@@ -209,7 +210,10 @@ app.Post("/test/body/raw", bodyparser.Raw(), func(req *expressgo.Request, res *e
 Config options:
 
 ```go
-bodyparser.RawConfig{}
+bodyparser.RawConfig{
+    Type: any // expected type: string or []string
+    Limit: any // expected type: int64 or string
+}
 ```
 
 #### Body (Text)
@@ -229,7 +233,10 @@ app.Post("/test/body/text", bodyparser.Text(), func(req *expressgo.Request, res 
 Config options:
 
 ```go
-bodyparser.TextConfig{}
+bodyparser.TextConfig{
+    Type: any // expected type: string or []string
+    Limit: any // expected type: int64 or string
+}
 ```
 
 #### req.Get

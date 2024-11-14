@@ -7,6 +7,14 @@ import (
 	"strings"
 )
 
+var isValidParamChar *regexp.Regexp
+var isNumber *regexp.Regexp
+
+func init() {
+	isValidParamChar = regexp.MustCompile("[A-Za-z0-9_]")
+	isNumber = regexp.MustCompile("[0-9]")
+}
+
 type Handler struct {
 	mux *http.ServeMux
 	app *App
@@ -48,8 +56,7 @@ func (h *Handler) pathToLower(path string) string {
 
 // param name should not start with a number
 func (h *Handler) isValidParamName(name string) bool {
-	isNumber, _ := regexp.MatchString("[0-9]", name[0:1])
-	return !isNumber
+	return !isNumber.MatchString(name[0:1])
 }
 
 // Parse the params in the current param zone from :name to {name}, and merge them if any separator is found.
@@ -102,7 +109,6 @@ func (h *Handler) parseParamZone(currentParams []string, currentSeparators []run
 //
 // error: any illegal variable naming or param format found
 func (h *Handler) parseParams(path string) (string, [][]string, error) {
-	isValidParamChar, _ := regexp.Compile("[A-Za-z0-9_]")
 	// separators
 	const (
 		hyphen = '-'
