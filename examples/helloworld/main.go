@@ -122,11 +122,9 @@ func main() {
 	})
 
 	app.Post("/test/body/base", bodyparser.Json(), func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
-		if j, ok := req.Body.(expressgo.BodyJsonBase); ok {
-			if t, ok := j["test"]; ok {
-				if s, ok := t.(string); ok {
-					res.Send(s)
-				}
+		if j, ok := req.Body.(*expressgo.BodyJsonBase); ok {
+			if t, ok := (*j)["test"]; ok {
+				res.Send(string(t))
 			}
 		}
 

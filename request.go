@@ -1,6 +1,7 @@
 package expressgo
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 )
@@ -13,7 +14,7 @@ type Request struct {
 	err    error
 }
 
-type BodyJsonBase map[string]interface{}
+type BodyJsonBase map[string]json.RawMessage
 
 // Get a request header specified by the field. The field is case-insensitive.
 func (req *Request) Get(field string) string {

@@ -127,7 +127,7 @@ app.Get("/test/query", func(req *expressgo.Request, res *expressgo.Response, nex
 
 **ExpressGo** provides a package under [github.com/Eandalf/expressgo/bodyparser](https://github.com/Eandalf/expressgo/bodyparser) for parsing the body of a request.
 
-`bodyparser.Json()` returns a parser as a middleware to parse received body stream with a specified type into `req.Body`. It defaults to use `expressgo.BodyJsonBase`, which is basically `map[string]interface{}`, as the received JSON type. Custom types could be supplied to the parser through `bodyparser.Json(bodyparser.JsonConfig{Receiver: &Test{}})` where `Test` is the name of the custom type. It is recommended to pass the pointer of the custom struct to `Receiver` option since the underlying decoder is `json.NewDecoder(...).Decode(...)` from **encoding/json**.
+`bodyparser.Json()` returns a parser as a middleware to parse received body stream with a specified type into `req.Body`. It defaults to use `expressgo.BodyJsonBase`, which is basically `map[string]json.RawMessage`, as the received JSON type. Custom types could be supplied to the parser through `bodyparser.Json(bodyparser.JsonConfig{Receiver: &Test{}})` where `Test` is the name of the custom type. It is recommended to pass the pointer of the custom struct to `Receiver` option since the underlying decoder is `json.NewDecoder(...).Decode(...)` from **encoding/json**.
 
 The parser leverages **encoding/json**. Hence, the custom struct should follow tag notations used in **encoding/json**.
 
@@ -143,11 +143,9 @@ To parse JSON with the default struct `expressgo.BodyJsonBase`:
 
 ```go
 app.Post("/test/body/base", bodyparser.Json(), func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
-    if j, ok := req.Body.(expressgo.BodyBase); ok {
-        if t, ok := j["test"]; ok {
-            if s, ok := t.(string); ok {
-                res.Send(s)
-            }
+    if j, ok := req.Body.(*expressgo.BodyJsonBase); ok {
+        if t, ok := (*j)["test"]; ok {
+            res.Send(string(t))
         }
     }
 
@@ -184,6 +182,55 @@ app.Post("/test/body/type", bodyparser.Json(bodyparser.JsonConfig{Receiver: &Tes
 > 1. `req.Body` is typed as `interface{}`.
 > 2. Although it is common to set `bodyParser.json()` as a global middleware in **Express.js**, with static type constraints in Go, it is not idiomatic to do so. Since it is common to have callbacks for POST requests expecting different DTOs, it is more suitable to place the JSON parser on each route as shown in the examples above.
 > 3. `bodyparser.Json()` could not be invoked twice on the same route (same method and same path), the parser would consume the body stream, which would lead to nothing left for the coming parser to process. If two JSON parsers are invoked, the second one would be a no-op instead of raising the `io.EOF` error to the next error-handling callback.
+
+Config options:
+
+```go
+bodyparser.JsonConfig{
+    Receiver: any // pointer to the receiving struct
+    Type: any // expected type: string or []string
+}
+```
+
+#### Body (Raw)
+
+This middleware is provided under [github.com/Eandalf/expressgo/bodyparser](https://github.com/Eandalf/expressgo/bodyparser).
+
+`bodyparser.Raw()` returns a parser as a middleware to parse received body stream with a specified type into `req.Body`. The type expected on `req.Body` is `[]byte`.
+
+```go
+app.Post("/test/body/raw", bodyparser.Raw(), func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+    if b, ok := req.Body.([]byte); ok {
+        res.Send(string(b))
+    }
+})
+```
+
+Config options:
+
+```go
+bodyparser.RawConfig{}
+```
+
+#### Body (Text)
+
+This middleware is provided under [github.com/Eandalf/expressgo/bodyparser](https://github.com/Eandalf/expressgo/bodyparser).
+
+`bodyparser.Text()` returns a parser as a middleware to parse received body stream with a specified type into `req.Body`. The type expected on `req.Body` is `string`.
+
+```go
+app.Post("/test/body/text", bodyparser.Text(), func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+    if s, ok := req.Body.(string); ok {
+        res.Send(s)
+    }
+})
+```
+
+Config options:
+
+```go
+bodyparser.TextConfig{}
+```
 
 #### req.Get
 
