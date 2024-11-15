@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"reflect"
+	"strings"
 
 	"github.com/Eandalf/expressgo"
 )
@@ -50,6 +51,14 @@ func createJsonParser(jsonConfig []JsonConfig) expressgo.Callback {
 	parser := func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 		// only intercept the request body if Content-Type is set to application/json
 		if isContentType(req.Native.Header.Get("Content-Type"), config.Type) {
+			charset := getCharset(req.Native.Header.Get("Content-Type"), "utf-8")
+			// RFC 7159 sec 8.1
+			// Although RFC 8259 sec 8.1 mandates UTF-8, we would tolerate UTF-* here.
+			if !strings.HasPrefix(charset, "utf-") {
+				next.Err = ErrCu
+				return
+			}
+
 			stream, sErr := getStream(
 				req.Native.Body,
 				&readOption{
@@ -60,7 +69,7 @@ func createJsonParser(jsonConfig []JsonConfig) expressgo.Callback {
 					config.Verify,
 				},
 				req.Native.Header.Get("Content-Encoding"),
-				req.Native.Header.Get("Content-Type"),
+				charset,
 			)
 			if sErr != nil {
 				next.Err = sErr

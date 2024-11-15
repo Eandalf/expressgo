@@ -189,6 +189,7 @@ Config options:
 bodyparser.JsonConfig{
     Receiver: any // pointer to the receiving struct
     Type: any // expected type: string or []string
+    Inflate: bool
     Limit: any // expected type: int64 or string
 }
 ```
@@ -212,6 +213,7 @@ Config options:
 ```go
 bodyparser.RawConfig{
     Type: any // expected type: string or []string
+    Inflate: bool
     Limit: any // expected type: int64 or string
 }
 ```
@@ -235,7 +237,9 @@ Config options:
 ```go
 bodyparser.TextConfig{
     Type: any // expected type: string or []string
+    Inflate: bool
     Limit: any // expected type: int64 or string
+    DefaultCharset: string
 }
 ```
 

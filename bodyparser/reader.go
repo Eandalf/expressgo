@@ -1,22 +1,17 @@
 package bodyparser
 
 import (
+	"compress/flate"
 	"compress/gzip"
 	"compress/lzw"
-	"compress/zlib"
-	"errors"
 	"io"
-	"regexp"
 	"slices"
 	"strings"
 
 	"github.com/Eandalf/expressgo"
+	"golang.org/x/text/encoding/ianaindex"
+	"golang.org/x/text/transform"
 )
-
-var ErrEu = errors.New("415: encoding.unsupported")
-var ErrCu = errors.New("415: charset.unsupported")
-var ErrEtl = errors.New("413: entity.too.large")
-var ErrEvf = errors.New("403: entity.verify.failed")
 
 const (
 	compressionTypeIdentity = "identity"
@@ -34,14 +29,16 @@ func getCompressions(value string) []string {
 
 	values := strings.Split(value, ",")
 	for _, v := range values {
-		result = append(result, strings.TrimSpace(v))
+		if tv := strings.TrimSpace(v); tv != "" {
+			result = append(result, tv)
+		}
 	}
 
 	return result
 }
 
 // Check if all compressions are "identity" (no compression).
-func isAllIdentity(compressions []string) bool {
+func areAllCompressionsIdentity(compressions []string) bool {
 	for _, c := range compressions {
 		if c != compressionTypeIdentity {
 			return false
@@ -49,49 +46,6 @@ func isAllIdentity(compressions []string) bool {
 	}
 
 	return true
-}
-
-// Check if all listed compression methods are supported.
-func areAllCompressionsSupported(compressions []string) bool {
-	supportedCompressions := []string{
-		compressionTypeIdentity,
-		compressionTypeDeflate,
-		compressionTypeGzip,
-		compressionTypeCompress,
-	}
-
-	for _, c := range compressions {
-		supported := false
-
-		for _, s := range supportedCompressions {
-			if c == s {
-				supported = true
-				break
-			}
-		}
-
-		if !supported {
-			return false
-		}
-	}
-
-	return true
-}
-
-var charsetMatch = regexp.MustCompile(`charset=([-\w]+)`)
-
-// Get charset from http header content-type.
-func getCharset(value string) string {
-	values := strings.Split(value, ";")
-	for _, v := range values {
-		matches := charsetMatch.FindStringSubmatch(v)
-		if len(matches) == 2 {
-			return strings.ToLower(matches[1])
-		}
-	}
-
-	// default to utf-8
-	return "utf-8"
 }
 
 type Verify func(*expressgo.Request, *expressgo.Response, []byte, string) error
@@ -108,6 +62,7 @@ type reader struct {
 	verify Verify
 }
 
+// Limit the length of stream reading and perform verify
 func (r *reader) Read(p []byte) (n int, err error) {
 	if r.N <= 0 {
 		return 0, io.EOF
@@ -141,18 +96,12 @@ func getStream(
 	r io.Reader,
 	option *readOption,
 	contentEncoding string,
-	contentType string,
+	charset string,
 ) (pipe io.Reader, err error) {
 	// get header infos
 	compressions := getCompressions(contentEncoding)
-	if (!option.inflate && !isAllIdentity(compressions)) || !areAllCompressionsSupported(compressions) {
+	if !option.inflate && !areAllCompressionsIdentity(compressions) {
 		err = ErrEu
-		return
-	}
-
-	charset := getCharset(contentType)
-	if !strings.HasPrefix(charset, "utf-") {
-		err = ErrCu
 		return
 	}
 
@@ -165,10 +114,7 @@ func getStream(
 		case compressionTypeIdentity:
 			// do nothing
 		case compressionTypeDeflate:
-			pipe, err = zlib.NewReader(pipe)
-			if err != nil {
-				return
-			}
+			pipe = flate.NewReader(pipe)
 		case compressionTypeGzip:
 			pipe, err = gzip.NewReader(pipe)
 			if err != nil {
@@ -176,7 +122,22 @@ func getStream(
 			}
 		case compressionTypeCompress:
 			pipe = lzw.NewReader(pipe, lzw.LSB, 8)
+		default:
+			// compression unsupported, raise the error
+			err = ErrEu
+			return
 		}
+	}
+
+	// decode the stream based on the charset
+	if charset != "" && charset != "utf-8" {
+		encoding, eErr := ianaindex.IANA.Encoding(charset)
+		if eErr != nil || encoding == nil {
+			// charset unsupported, raise the error
+			err = ErrCu
+			return
+		}
+		pipe = transform.NewReader(pipe, encoding.NewDecoder().Transformer)
 	}
 
 	pipe = &reader{

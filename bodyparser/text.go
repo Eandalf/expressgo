@@ -7,19 +7,20 @@ import (
 )
 
 type TextConfig struct {
-	Type     any
-	Inflate  bool
-	Limit    any
-	limitNum int64
-	Verify   Verify
-	// TODO: defaultCharset
+	Type           any
+	Inflate        bool
+	Limit          any
+	limitNum       int64
+	Verify         Verify
+	DefaultCharset string
 }
 
 func createTextParser(textConfig []TextConfig) expressgo.Callback {
 	config := TextConfig{
-		Type:    "text/plain",
-		Inflate: true,
-		Limit:   "100kb",
+		Type:           "text/plain",
+		Inflate:        true,
+		Limit:          "100kb",
+		DefaultCharset: "utf-8",
 	}
 
 	if len(textConfig) > 0 {
@@ -37,12 +38,17 @@ func createTextParser(textConfig []TextConfig) expressgo.Callback {
 		if userConfig.Verify != nil {
 			config.Verify = userConfig.Verify
 		}
+		if userConfig.DefaultCharset != "" {
+			config.DefaultCharset = userConfig.DefaultCharset
+		}
 	}
 
 	config.limitNum = parseByte(config.Limit)
 
 	parser := func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
 		if isContentType(req.Native.Header.Get("Content-Type"), config.Type) {
+			charset := getCharset(req.Native.Header.Get("Content-Type"), config.DefaultCharset)
+
 			stream, sErr := getStream(
 				req.Native.Body,
 				&readOption{
@@ -53,7 +59,7 @@ func createTextParser(textConfig []TextConfig) expressgo.Callback {
 					config.Verify,
 				},
 				req.Native.Header.Get("Content-Encoding"),
-				req.Native.Header.Get("Content-Type"),
+				charset,
 			)
 			if sErr != nil {
 				next.Err = sErr

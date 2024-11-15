@@ -52,7 +52,7 @@ func createRawParser(rawConfig []RawConfig) expressgo.Callback {
 					config.Verify,
 				},
 				req.Native.Header.Get("Content-Encoding"),
-				req.Native.Header.Get("Content-Type"),
+				"",
 			)
 			if sErr != nil {
 				next.Err = sErr
