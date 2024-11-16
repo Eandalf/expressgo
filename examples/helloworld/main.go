@@ -156,6 +156,16 @@ func main() {
 		}
 	})
 
+	app.Post("/test/body/form/url", bodyparser.Urlencoded(), func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+		if f, ok := req.Body.(expressgo.BodyFormUrlEncoded); ok {
+			output := ""
+			for k, v := range f {
+				output += fmt.Sprintf("%s: %s<br />", k, v)
+			}
+			res.Send(output)
+		}
+	})
+
 	app.UseError(
 		"/test/error",
 		func(err error, req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {

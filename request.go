@@ -16,6 +16,8 @@ type Request struct {
 
 type BodyJsonBase map[string]json.RawMessage
 
+type BodyFormUrlEncoded map[string]string
+
 // Get a request header specified by the field. The field is case-insensitive.
 func (req *Request) Get(field string) string {
 	values := req.Native.Header.Values(field)

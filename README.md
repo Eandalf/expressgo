@@ -191,6 +191,7 @@ bodyparser.JsonConfig{
     Type: any // expected type: string or []string
     Inflate: bool
     Limit: any // expected type: int64 or string
+    Verify: bodyparser.Verify // func(*expressgo.Request, *expressgo.Response, []byte, string) error
 }
 ```
 
@@ -215,6 +216,7 @@ bodyparser.RawConfig{
     Type: any // expected type: string or []string
     Inflate: bool
     Limit: any // expected type: int64 or string
+    Verify: bodyparser.Verify // func(*expressgo.Request, *expressgo.Response, []byte, string) error
 }
 ```
 
@@ -239,6 +241,37 @@ bodyparser.TextConfig{
     Type: any // expected type: string or []string
     Inflate: bool
     Limit: any // expected type: int64 or string
+    Verify: bodyparser.Verify // func(*expressgo.Request, *expressgo.Response, []byte, string) error
+    DefaultCharset: string
+}
+```
+
+#### Body (Urlencoded)
+
+This middleware is provided under [github.com/Eandalf/expressgo/bodyparser](https://github.com/Eandalf/expressgo/bodyparser).
+
+`bodyparser.Urlencoded()` returns a parser as a middleware to parse received body stream with a specified type into `req.Body`. The type expected on `req.Body` is `expressgo.BodyFormUrlEncoded`, which is basically `map[string]string`.
+
+```go
+app.Post("/test/body/form/url", bodyparser.Urlencoded(), func(req *expressgo.Request, res *expressgo.Response, next *expressgo.Next) {
+    if f, ok := req.Body.(expressgo.BodyFormUrlEncoded); ok {
+        output := ""
+        for k, v := range f {
+            output += fmt.Sprintf("%s: %s<br />", k, v)
+        }
+        res.Send(output)
+    }
+})
+```
+
+Config options:
+
+```go
+bodyparser.TextConfig{
+    Type: any // expected type: string or []string
+    Inflate: bool
+    Limit: any // expected type: int64 or string
+    Verify: bodyparser.Verify // func(*expressgo.Request, *expressgo.Response, []byte, string) error
     DefaultCharset: string
 }
 ```

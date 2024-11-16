@@ -56,3 +56,7 @@ func Raw(rawConfig ...RawConfig) expressgo.Callback {
 func Text(textConfig ...TextConfig) expressgo.Callback {
 	return createTextParser(textConfig)
 }
+
+func Urlencoded(urlencodedConfig ...UrlencodedConfig) expressgo.Callback {
+	return createUrlencodedParser(urlencodedConfig)
+}
